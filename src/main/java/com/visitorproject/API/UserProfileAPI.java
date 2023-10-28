@@ -43,13 +43,13 @@ public class UserProfileAPI {
     }
 
     @GetMapping("/{userId}")
-    public UserProfile getUser(@PathVariable Integer userId) {
+    public UserProfile getUser(@PathVariable Long userId) {
         return userProfileService.getUserbyId(userId);
     }
 
     @PostMapping("/new-user")
     public String createNewUser(@RequestBody UserProfileDto userProfileDto) {
-        Integer user = userProfileService.createUser(userProfileDto);
+        Long user = userProfileService.createUser(userProfileDto);
         return "User with ID " + user + " is created";
     }
 

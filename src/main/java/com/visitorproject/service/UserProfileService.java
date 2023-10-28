@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UserProfileService implements UserDetailsService {
@@ -24,8 +25,6 @@ public class UserProfileService implements UserDetailsService {
     @Autowired
     UserProfileRepo userProfileRepo;
 
-    @Autowired
-    UserAdressesRepo userAdressesRepo;
 
     private static final Logger logger = LoggerFactory.getLogger(UserProfileService.class);
 
@@ -49,7 +48,7 @@ public class UserProfileService implements UserDetailsService {
         return listOfUsers;
     }
 
-    public UserProfile getUserbyId(Integer userId) {
+    public UserProfile getUserbyId(Long userId) {
         Optional<UserProfile> byId = userProfileRepo.findById(userId);
         if (byId.isPresent()) {
             return byId.get();
@@ -58,8 +57,13 @@ public class UserProfileService implements UserDetailsService {
         }
     }
 
-    public Integer createUser(UserProfileDto userProfileDto) {
+    public Long createUser(UserProfileDto userProfileDto) {
         verifyUserProfile(userProfileDto);
+        List<UserAddressesDTO> userAddressesDTO1 = userProfileDto.getUserAddressesDTO();
+
+        List<UserAddresses> userAddressesList = new ArrayList<>();
+        userAddressesList = userAddressesDTO1.stream().map(x -> UserAddressesDTO.userAddressDTOtoUserAddress(x)).collect(Collectors.toList());
+
         UserProfile newUser = UserProfile.builder()
                 .userName(userProfileDto.getUserName())
                 .firstName(userProfileDto.getFirstName())
@@ -67,7 +71,9 @@ public class UserProfileService implements UserDetailsService {
                 .email(userProfileDto.getEmail())
                 .phoneNum(userProfileDto.getPhoneNum())
                 .password(userProfileDto.getPassword())
+                .userAddresses(userAddressesList)
                 .build();
+
         UserProfile newUserSaved = userProfileRepo.save(newUser);
         return newUserSaved.getId();
     }

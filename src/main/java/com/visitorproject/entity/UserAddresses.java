@@ -17,11 +17,11 @@ public class UserAddresses {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    private Integer Id;
+    private Long Id;
 
     private Boolean defaultAddress;
 
-    private Boolean SocietyRegistered;
+    private Boolean societyRegistered;
 
     private String societyName;
 
@@ -37,7 +37,4 @@ public class UserAddresses {
 
     private String pinCode;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private UserProfile userProfile;
 }

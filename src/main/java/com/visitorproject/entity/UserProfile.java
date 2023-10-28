@@ -21,7 +21,7 @@ public class UserProfile {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    private Integer id;
+    private Long id;
 
     private String userName;
 
@@ -42,8 +42,9 @@ public class UserProfile {
     @NotBlank
     @Size(min = 10)
     @Column(nullable = false)
-    private Integer phoneNum;
+    private String phoneNum;
 
-    @OneToMany
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_id")
     public List<UserAddresses> userAddresses;
 }
