@@ -2,8 +2,10 @@ package com.visitorproject.service;
 
 import com.visitorproject.dtos.UserAddressesDTO;
 import com.visitorproject.dtos.UserProfileDto;
+import com.visitorproject.dtos.VehiclesDTO;
 import com.visitorproject.entity.UserAddresses;
 import com.visitorproject.entity.UserProfile;
+import com.visitorproject.entity.Vehicles;
 import com.visitorproject.repo.UserAdressesRepo;
 import com.visitorproject.repo.UserProfileRepo;
 import org.slf4j.Logger;
@@ -59,10 +61,13 @@ public class UserProfileService implements UserDetailsService {
 
     public Long createUser(UserProfileDto userProfileDto) {
         verifyUserProfile(userProfileDto);
-        List<UserAddressesDTO> userAddressesDTO1 = userProfileDto.getUserAddressesDTO();
+        //creating the Address Entity
+        List<UserAddressesDTO> userAddressesDTO = userProfileDto.getUserAddressesDTO();
+        List<UserAddresses> userAddressesList = userAddressesDTO.stream().map(x -> UserAddressesDTO.userAddressDTOtoUserAddress(x)).collect(Collectors.toList());
 
-        List<UserAddresses> userAddressesList = new ArrayList<>();
-        userAddressesList = userAddressesDTO1.stream().map(x -> UserAddressesDTO.userAddressDTOtoUserAddress(x)).collect(Collectors.toList());
+        //Creating the Vehicles Entity
+        List<VehiclesDTO> vehiclesDTOS = userProfileDto.getVehiclesDTOS();
+        List<Vehicles> vehiclesList = vehiclesDTOS.stream().map(x -> VehiclesDTO.vehicleDTOtoVehicle(x)).collect(Collectors.toList());
 
         UserProfile newUser = UserProfile.builder()
                 .userName(userProfileDto.getUserName())
@@ -72,6 +77,7 @@ public class UserProfileService implements UserDetailsService {
                 .phoneNum(userProfileDto.getPhoneNum())
                 .password(userProfileDto.getPassword())
                 .userAddresses(userAddressesList)
+                .vehiclesList(vehiclesList)
                 .build();
 
         UserProfile newUserSaved = userProfileRepo.save(newUser);

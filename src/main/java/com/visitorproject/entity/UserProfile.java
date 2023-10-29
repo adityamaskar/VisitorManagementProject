@@ -20,7 +20,7 @@ import java.util.List;
 public class UserProfile {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(unique = true, nullable = false)
@@ -48,10 +48,10 @@ public class UserProfile {
     private String phoneNum;
 
     @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id_withAddress")
+    @JoinColumn(name = "user_id")
     private List<UserAddresses> userAddresses;
 
     @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id_withVehicle")
+    @JoinColumn(name = "user_id")
     private List<Vehicles> vehiclesList;
 }

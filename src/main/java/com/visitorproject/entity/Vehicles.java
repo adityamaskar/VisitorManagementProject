@@ -16,15 +16,15 @@ import javax.persistence.*;
 public class Vehicles {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String VehicleName;
+    private String vehicleName;
 
     @Enumerated(EnumType.STRING)
     private VehicleType vehicleType;
 
-    private String VehicleNum;
+    private String vehicleNum;
 
-    private boolean isCab;
+    private Boolean isCab;
 }

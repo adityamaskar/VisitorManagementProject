@@ -1,6 +1,7 @@
 package com.visitorproject.dtos;
 
 import com.visitorproject.entity.VehicleType;
+import com.visitorproject.entity.Vehicles;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,12 +18,30 @@ import javax.persistence.Table;
 @Builder
 public class VehiclesDTO {
 
-    private String VehicleName;
+    private String vehicleName;
 
     @Enumerated(EnumType.STRING)
     private VehicleType vehicleType;
 
-    private String VehicleNum;
+    private String vehicleNum;
 
-    private boolean isCab;
+    private Boolean isCab;
+
+    public static Vehicles vehicleDTOtoVehicle(VehiclesDTO vehiclesDTO) {
+        Vehicles vehicles = Vehicles.builder().vehicleNum(vehiclesDTO.getVehicleNum())
+                .vehicleName(vehiclesDTO.getVehicleName())
+                .vehicleType(vehiclesDTO.getVehicleType())
+                .isCab(vehiclesDTO.getIsCab())
+                .build();
+        return vehicles;
+    }
+
+    public static VehiclesDTO vehicleToVehicleDTO(Vehicles vehicles) {
+        VehiclesDTO vehiclesDTO = VehiclesDTO.builder().vehicleNum(vehicles.getVehicleNum())
+                .vehicleName(vehicles.getVehicleName())
+                .vehicleType(vehicles.getVehicleType())
+                .isCab(vehicles.getIsCab())
+                .build();
+        return vehiclesDTO;
+    }
 }

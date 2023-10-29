@@ -27,7 +27,7 @@ public class VisitTrackerDTO {
 
     private LocalDateTime actualExitDateTime;
 
-    private Integer NumberOfVisitors;
+    private Integer numberOfVisitors;
 
     private Boolean isVehiclePresent;
 
