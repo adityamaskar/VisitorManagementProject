@@ -20,13 +20,16 @@ import java.util.List;
 public class UserProfile {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @Column(unique = true, nullable = false)
     private String userName;
 
+    @Column(nullable = false)
     private String firstName;
 
+    @Column(nullable = false)
     private String lastName;
 
     @NotBlank
@@ -45,6 +48,10 @@ public class UserProfile {
     private String phoneNum;
 
     @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id")
-    public List<UserAddresses> userAddresses;
+    @JoinColumn(name = "user_id_withAddress")
+    private List<UserAddresses> userAddresses;
+
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_id_withVehicle")
+    private List<Vehicles> vehiclesList;
 }

@@ -16,7 +16,7 @@ import javax.persistence.*;
 public class UserAddresses {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long Id;
 
     private Boolean defaultAddress;

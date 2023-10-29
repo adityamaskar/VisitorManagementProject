@@ -1,6 +1,7 @@
 package com.visitorproject.dtos;
 
 import com.visitorproject.entity.UserProfile;
+import com.visitorproject.entity.Vehicles;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,7 +28,9 @@ public class UserProfileDto {
 
     private String phoneNum;
 
-    public List<UserAddressesDTO> userAddressesDTO;
+    private List<UserAddressesDTO> userAddressesDTO;
+
+    private List<VehiclesDTO> vehiclesDTOS;
 
 //    public static UserProfileDto userProfiletoUserProfileDTO(UserProfile userProfile) {
 //        UserProfileDto userProfileDto = UserProfileDto.builder().email(userProfile.getEmail())
