@@ -1,12 +1,16 @@
 package com.visitorproject.dtos;
 
+import com.visitorproject.entity.Gender;
 import com.visitorproject.entity.UserProfile;
+import com.visitorproject.entity.VehicleType;
 import com.visitorproject.entity.Vehicles;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import java.util.List;
 
 
@@ -21,6 +25,9 @@ public class UserProfileDto {
     private String firstName;
 
     private String lastName;
+
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
 
     private String password;
 

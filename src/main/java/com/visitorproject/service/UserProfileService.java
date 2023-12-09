@@ -104,6 +104,7 @@ public class UserProfileService implements UserDetailsService {
                 .userName(userProfileDto.getUserName())
                 .firstName(userProfileDto.getFirstName())
                 .lastName(userProfileDto.getLastName())
+                .gender(userProfileDto.getGender())
                 .email(userProfileDto.getEmail())
                 .phoneNum(userProfileDto.getPhoneNum())
                 .password(userProfileDto.getPassword())

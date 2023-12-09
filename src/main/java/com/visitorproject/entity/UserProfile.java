@@ -29,6 +29,9 @@ public class UserProfile {
     @Column(nullable = false)
     private String lastName;
 
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
+
     @NotBlank
     @Size(min = 8)
     @Column(nullable = false)
