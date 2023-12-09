@@ -118,7 +118,7 @@ public class UserProfileService implements UserDetailsService {
     private void verifyUserProfile(UserProfileDto userProfileDto) {
         UserProfile byUserName = userProfileRepo.findByUserName(userProfileDto.getUserName());
         if (byUserName != null) {
-            throw new RuntimeException("User already exists");
+            throw new RuntimeException("UserName already exists");
         }
         UserProfile byemail = userProfileRepo.findByemail(userProfileDto.getEmail());
         if (byemail != null) {
