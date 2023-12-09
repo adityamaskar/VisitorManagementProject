@@ -23,6 +23,13 @@ public class VisitTracker {
     @Column(nullable = false)
     private String visitorUsername;
 
+    @Column(nullable = false)
+    private String ownerUsername;
+
+    @Column(nullable = false)
+    private Long ownerAddressId;
+
+    @Column
     private LocalDateTime visitDateTime;
 
     private LocalDateTime exitDateTime;
@@ -38,7 +45,7 @@ public class VisitTracker {
 
     private Boolean isVehiclePresent;
 
-    private Long vehicleId;
+    private Long visitorVehicleId;
 
     private Boolean ownerApproval;
 

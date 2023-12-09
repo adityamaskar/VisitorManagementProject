@@ -12,6 +12,8 @@ import lombok.NoArgsConstructor;
 @Builder
 public class UserAddressesDTO {
 
+    private String addressName;
+
     private Boolean defaultAddress;
 
     private Boolean societyRegistered;
@@ -33,6 +35,7 @@ public class UserAddressesDTO {
     public static UserAddressesDTO userAddressesToUserAddressDTO(UserAddresses userAddresses) {
         UserAddressesDTO addressesDTO = UserAddressesDTO.builder().district(userAddresses.getDistrict()).city(userAddresses.getCity())
                 .defaultAddress(userAddresses.getDefaultAddress())
+                .addressName(userAddresses.getAddressName())
                 .pinCode(userAddresses.getPinCode())
                 .flatNumber(userAddresses.getPinCode())
                 .societyName(userAddresses.getSocietyName())
@@ -46,6 +49,7 @@ public class UserAddressesDTO {
     public static UserAddresses userAddressDTOtoUserAddress(UserAddressesDTO userAddressesDTO) {
         UserAddresses userAddresses = UserAddresses.builder().district(userAddressesDTO.getDistrict()).city(userAddressesDTO.getCity())
                 .defaultAddress(userAddressesDTO.getDefaultAddress())
+                .addressName(userAddressesDTO.getAddressName())
                 .pinCode(userAddressesDTO.getPinCode())
                 .flatNumber(userAddressesDTO.getPinCode())
                 .societyName(userAddressesDTO.getSocietyName())

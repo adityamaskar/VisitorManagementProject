@@ -17,6 +17,10 @@ public class VisitTrackerDTO {
 
     private String visitorUsername;
 
+    private String ownerUsername;
+
+    private Long ownerAddressId;
+
     private LocalDateTime visitDateTime;
 
     private LocalDateTime exitDateTime;
@@ -31,7 +35,7 @@ public class VisitTrackerDTO {
 
     private Boolean isVehiclePresent;
 
-    private Long vehicleId;
+    private Long visitorVehicleId;
 
     private Boolean ownerApproval;
 

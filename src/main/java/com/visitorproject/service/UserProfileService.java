@@ -8,6 +8,8 @@ import com.visitorproject.entity.UserProfile;
 import com.visitorproject.entity.Vehicles;
 import com.visitorproject.repo.UserAdressesRepo;
 import com.visitorproject.repo.UserProfileRepo;
+import com.visitorproject.repo.UserVehicleRepo;
+import com.visitorproject.repo.UserVisitTrackerRepo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +27,16 @@ import java.util.stream.Collectors;
 public class UserProfileService implements UserDetailsService {
 
     @Autowired
-    UserProfileRepo userProfileRepo;
+    private UserProfileRepo userProfileRepo;
+
+    @Autowired
+    private UserAdressesRepo userAdressesRepo;
+
+    @Autowired
+    private UserVehicleRepo userVehicleRepo;
+
+    @Autowired
+    private UserVisitTrackerRepo userVisitTrackerRepo;
 
 
     private static final Logger logger = LoggerFactory.getLogger(UserProfileService.class);
@@ -59,15 +70,35 @@ public class UserProfileService implements UserDetailsService {
         }
     }
 
+    public UserProfile getUserByUserName(String userName) {
+        UserProfile byUserName = userProfileRepo.findByUserName(userName);
+        if (byUserName != null) {
+            return byUserName;
+        } else {
+            throw new RuntimeException("User " + userName + " doesn't exist.");
+        }
+    }
+
+
     public Long createUser(UserProfileDto userProfileDto) {
         verifyUserProfile(userProfileDto);
         //creating the Address Entity
         List<UserAddressesDTO> userAddressesDTO = userProfileDto.getUserAddressesDTO();
-        List<UserAddresses> userAddressesList = userAddressesDTO.stream().map(x -> UserAddressesDTO.userAddressDTOtoUserAddress(x)).collect(Collectors.toList());
+        List<UserAddresses> userAddressesList = null;
+        if (userAddressesDTO != null) {
+            userAddressesList = userAddressesDTO.stream().map(x -> UserAddressesDTO.userAddressDTOtoUserAddress(x)).collect(Collectors.toList());
+        } else {
+            logger.error("Address is Empty");
+        }
 
         //Creating the Vehicles Entity
         List<VehiclesDTO> vehiclesDTOS = userProfileDto.getVehiclesDTOS();
-        List<Vehicles> vehiclesList = vehiclesDTOS.stream().map(x -> VehiclesDTO.vehicleDTOtoVehicle(x)).collect(Collectors.toList());
+        List<Vehicles> vehiclesList = null;
+        if (vehiclesDTOS != null) {
+            vehiclesList = vehiclesDTOS.stream().map(x -> VehiclesDTO.vehicleDTOtoVehicle(x)).collect(Collectors.toList());
+        } else {
+            logger.error("Vehicle is Empty");
+        }
 
         UserProfile newUser = UserProfile.builder()
                 .userName(userProfileDto.getUserName())

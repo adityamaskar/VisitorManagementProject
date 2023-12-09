@@ -2,8 +2,10 @@ package com.visitorproject.API;
 
 import com.visitorproject.dtos.UserAddressesDTO;
 import com.visitorproject.dtos.UserProfileDto;
+import com.visitorproject.dtos.VisitTrackerDTO;
 import com.visitorproject.entity.AuthRequest;
 import com.visitorproject.entity.UserProfile;
+import com.visitorproject.service.NewVisitService;
 import com.visitorproject.service.UserAddressesService;
 import com.visitorproject.service.UserProfileService;
 import com.visitorproject.util.JWTUtil;
@@ -13,9 +15,12 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/user")
+@CrossOrigin(origins = "*")
+//@CrossOrigin(origins = "http://localhost:5173")
 public class UserProfileAPI {
 
     @Autowired
@@ -25,7 +30,10 @@ public class UserProfileAPI {
     private UserAddressesService userAddressesService;
 
     @Autowired
-    AuthenticationManager authenticationManager;
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private NewVisitService newVisitService;
 
     @Autowired
     private JWTUtil jwtUtil;
@@ -47,6 +55,12 @@ public class UserProfileAPI {
         return userProfileService.getUserbyId(userId);
     }
 
+    @GetMapping("username/{username}")
+    public UserProfile getUserViaJWT(@PathVariable String username) {
+        return userProfileService.getUserByUserName(username);
+    }
+
+
     @PostMapping("/new-user")
     public String createNewUser(@RequestBody UserProfileDto userProfileDto) {
         Long user = userProfileService.createUser(userProfileDto);
@@ -57,8 +71,8 @@ public class UserProfileAPI {
     public String SetNewAddress(@RequestHeader("Authorization") String authorizationHeader, @RequestBody UserAddressesDTO userAddressesDTO) {
         String token = extractJwtToken(authorizationHeader);
         String username = getUsername(token);
-        userAddressesService.setNewAddress(userAddressesDTO, username);
-        return "SAVED";
+        String result = userAddressesService.setNewAddress(userAddressesDTO, username);
+        return " Address " + result + " SAVED";
     }
 
     @GetMapping("/test/{token}")
@@ -84,4 +98,19 @@ public class UserProfileAPI {
         }
         return jwtUtil.generateToken(authRequest.getUserName());
     }
+
+    @GetMapping("/search-home")
+    public Map<String, String> searchHome(@RequestParam String firstName, @RequestParam String phoneNum, @RequestParam String societyName, @RequestParam(required = false) String addressName) {
+        Map<String, String> searchedSociety = newVisitService.searchSociety(firstName, phoneNum, societyName, addressName);
+        return searchedSociety;
+    }
+
+    @PostMapping("set-visit")
+    public void setVisit(@RequestHeader("Authorization") String authorizationHeader, @RequestBody VisitTrackerDTO visitTrackerDTO, @RequestParam String phoneNum) {
+        String token = extractJwtToken(authorizationHeader);
+        String username = getUsername(token);
+        newVisitService.setVisit(visitTrackerDTO, phoneNum, username);
+    }
+
+
 }

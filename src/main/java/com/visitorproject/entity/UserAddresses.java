@@ -18,6 +18,8 @@ public class UserAddresses {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long Id;
+    
+    private String addressName;
 
     private Boolean defaultAddress;
 
