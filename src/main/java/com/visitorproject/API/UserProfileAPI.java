@@ -2,12 +2,14 @@ package com.visitorproject.API;
 
 import com.visitorproject.dtos.UserAddressesDTO;
 import com.visitorproject.dtos.UserProfileDto;
+import com.visitorproject.dtos.VehiclesDTO;
 import com.visitorproject.dtos.VisitTrackerDTO;
 import com.visitorproject.entity.AuthRequest;
 import com.visitorproject.entity.UserProfile;
 import com.visitorproject.service.NewVisitService;
 import com.visitorproject.service.UserAddressesService;
 import com.visitorproject.service.UserProfileService;
+import com.visitorproject.service.UserVehiclesService;
 import com.visitorproject.util.JWTUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -28,6 +30,9 @@ public class UserProfileAPI {
 
     @Autowired
     private UserAddressesService userAddressesService;
+
+    @Autowired
+    private UserVehiclesService userVehiclesService;
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -73,6 +78,14 @@ public class UserProfileAPI {
         String username = getUsername(token);
         String result = userAddressesService.setNewAddress(userAddressesDTO, username);
         return " Address " + result + " SAVED";
+    }
+
+    @PostMapping("/set-vehicle-details")
+    public String SetNewVehicle(@RequestHeader("Authorization") String authorizationHeader, @RequestBody VehiclesDTO vehiclesDTO) {
+        String token = extractJwtToken(authorizationHeader);
+        String username = getUsername(token);
+        String result = userVehiclesService.setNewVehicle(vehiclesDTO, username);
+        return result;
     }
 
     @GetMapping("/test/{token}")
