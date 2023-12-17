@@ -30,11 +30,15 @@ public class NewVisitService {
     private UserVehicleRepo userVehicleRepo;
 
 
-    public Map<String, String> searchSociety(String firstName, String phoneNum, String societyName, String addressName) {
+    public Map<String, String> searchSociety(String firstName, String phoneNum, String societyName, String addressName, String currentUsername) {
         UserProfile byPhoneNum = userProfileRepo.findByPhoneNum(phoneNum);
+
         Map<String, String> userInformation = new HashMap<>();
         if (byPhoneNum == null) {
             throw new RuntimeException("This Phone Number : '" + phoneNum + "' not assigned with the User");
+        }
+        if (byPhoneNum.getUserName().equalsIgnoreCase(currentUsername)) {
+            throw new RuntimeException("You are trying to enter your own details : Phone Number ");
         }
         List<UserAddresses> userAddresses = byPhoneNum.getUserAddresses();
 //        String selectedSociety = null;
@@ -44,7 +48,7 @@ public class NewVisitService {
             if (userWithSameSociety.isEmpty()) {
                 throw new RuntimeException("This Society Name : '" + societyName + "' is not correct");
             }
-            if (addressName != null && !addressName.equalsIgnoreCase("undefined")) {
+            if (addressName != null || addressName == "undefined" && !addressName.equalsIgnoreCase("undefined")) {
                 List<UserAddresses> userWithSameAddressName = userAddresses.stream().filter(x -> x.getAddressName().equalsIgnoreCase(addressName)).collect(Collectors.toList());
                 if (!userWithSameAddressName.isEmpty()) {
                     userInformation.put("result", "found");

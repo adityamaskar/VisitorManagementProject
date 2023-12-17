@@ -113,8 +113,10 @@ public class UserProfileAPI {
     }
 
     @GetMapping("/search-home")
-    public Map<String, String> searchHome(@RequestParam String firstName, @RequestParam String phoneNum, @RequestParam String societyName, @RequestParam(required = false) String addressName) {
-        Map<String, String> searchedSociety = newVisitService.searchSociety(firstName, phoneNum, societyName, addressName);
+    public Map<String, String> searchHome(@RequestHeader("Authorization") String authorizationHeader, @RequestParam String firstName, @RequestParam String phoneNum, @RequestParam String societyName, @RequestParam(required = false) String addressName) {
+        String token = extractJwtToken(authorizationHeader);
+        String currentUsername = getUsername(token);
+        Map<String, String> searchedSociety = newVisitService.searchSociety(firstName, phoneNum, societyName, addressName, currentUsername);
         return searchedSociety;
     }
 
