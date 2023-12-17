@@ -1,9 +1,6 @@
 package com.visitorproject.API;
 
-import com.visitorproject.dtos.UserAddressesDTO;
-import com.visitorproject.dtos.UserProfileDto;
-import com.visitorproject.dtos.VehiclesDTO;
-import com.visitorproject.dtos.VisitTrackerDTO;
+import com.visitorproject.dtos.*;
 import com.visitorproject.entity.AuthRequest;
 import com.visitorproject.entity.UserProfile;
 import com.visitorproject.service.NewVisitService;
@@ -17,7 +14,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/user")
@@ -113,10 +109,10 @@ public class UserProfileAPI {
     }
 
     @GetMapping("/search-home")
-    public Map<String, String> searchHome(@RequestHeader("Authorization") String authorizationHeader, @RequestParam String firstName, @RequestParam String phoneNum, @RequestParam String societyName, @RequestParam(required = false) String addressName) {
+    public SearchUserInfoDTO searchHome(@RequestHeader("Authorization") String authorizationHeader, @RequestParam String firstName, @RequestParam String phoneNum, @RequestParam String societyName, @RequestParam(required = false) String addressName) {
         String token = extractJwtToken(authorizationHeader);
         String currentUsername = getUsername(token);
-        Map<String, String> searchedSociety = newVisitService.searchSociety(firstName, phoneNum, societyName, addressName, currentUsername);
+        SearchUserInfoDTO searchedSociety = newVisitService.searchSociety(firstName, phoneNum, societyName, addressName, currentUsername);
         return searchedSociety;
     }
 

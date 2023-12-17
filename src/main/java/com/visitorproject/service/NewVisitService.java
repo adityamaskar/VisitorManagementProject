@@ -1,5 +1,6 @@
 package com.visitorproject.service;
 
+import com.visitorproject.dtos.SearchUserInfoDTO;
 import com.visitorproject.dtos.UserAddressesDTO;
 import com.visitorproject.dtos.VisitTrackerDTO;
 import com.visitorproject.entity.UserAddresses;
@@ -30,10 +31,11 @@ public class NewVisitService {
     private UserVehicleRepo userVehicleRepo;
 
 
-    public Map<String, String> searchSociety(String firstName, String phoneNum, String societyName, String addressName, String currentUsername) {
+    public SearchUserInfoDTO searchSociety(String firstName, String phoneNum, String societyName, String addressName, String currentUsername) {
         UserProfile byPhoneNum = userProfileRepo.findByPhoneNum(phoneNum);
 
-        Map<String, String> userInformation = new HashMap<>();
+//        Map<String, String> userInformation = new HashMap<>();
+        SearchUserInfoDTO searchUserInfoDTO = new SearchUserInfoDTO();
         if (byPhoneNum == null) {
             throw new RuntimeException("This Phone Number : '" + phoneNum + "' not assigned with the User");
         }
@@ -51,30 +53,31 @@ public class NewVisitService {
             if (addressName != null || addressName == "undefined" && !addressName.equalsIgnoreCase("undefined")) {
                 List<UserAddresses> userWithSameAddressName = userAddresses.stream().filter(x -> x.getAddressName().equalsIgnoreCase(addressName)).collect(Collectors.toList());
                 if (!userWithSameAddressName.isEmpty()) {
-                    userInformation.put("result", "found");
-                    userInformation.put("firstName", byPhoneNum.getFirstName());
-                    userInformation.put("lastName", byPhoneNum.getLastName());
-                    userInformation.put("societyAvailableWithInfo", userWithSameAddressName.get(0).toString());
-                    userInformation.put("message", "Society Details as Below");
-                    return userInformation;
+                    SearchUserInfoDTO userInfoDTO = searchUserInfoDTO.builder().message("Society Details as Below")
+                            .result("found").lastName(byPhoneNum.getLastName())
+                            .firstName(byPhoneNum.getFirstName())
+                            .societyAvailableWithInfo(userWithSameAddressName.stream().map(x -> UserAddressesDTO.userAddressesToUserAddressDTO(x)).collect(Collectors.toList()))
+                            .build();
+
+                    return userInfoDTO;
                 } else {
                     if (userWithSameSociety.size() == 1) {
-                        userInformation.put("result", "found");
-                        userInformation.put("firstName", byPhoneNum.getFirstName());
-                        userInformation.put("lastName", byPhoneNum.getLastName());
-                        userInformation.put("message", "Found Above address if the required address not available please contact owner to add it");
+                        SearchUserInfoDTO userInfoDTO = searchUserInfoDTO.builder().message("Found Above address if the required address not available please contact owner to add it")
+                                .result("found").lastName(byPhoneNum.getLastName())
+                                .firstName(byPhoneNum.getFirstName())
+                                .societyAvailableWithInfo(userWithSameSociety.stream().map(x -> UserAddressesDTO.userAddressesToUserAddressDTO(x)).collect(Collectors.toList()))
+                                .build();
 
-                        userInformation.put("societyAvailableWithInfo", userWithSameSociety.toString());
-                        return userInformation;
+                        return userInfoDTO;
                     } else {
-                        userInformation.put("result", "multiple Found");
-                        userInformation.put("firstName", byPhoneNum.getFirstName());
-                        userInformation.put("lastName", byPhoneNum.getLastName());
-                        userInformation.put("message", "Address Name is incorrect, Below are the available addresses with the Society Name, " +
-                                "If desired addresses not there connect owner to Add it");
+                        SearchUserInfoDTO userInfoDTO = searchUserInfoDTO.builder().message("Address Name is incorrect, Below are the available addresses with the Society Name, \" +\n" +
+                                        "                                \"If desired addresses not there connect owner to Add it")
+                                .result("multiple found").lastName(byPhoneNum.getLastName())
+                                .firstName(byPhoneNum.getFirstName())
+                                .societyAvailableWithInfo(userWithSameSociety.stream().map(x -> UserAddressesDTO.userAddressesToUserAddressDTO(x)).collect(Collectors.toList()))
+                                .build();
 
-                        userInformation.put("societyAvailableWithInfo", userWithSameSociety.toString());
-                        return userInformation;
+                        return userInfoDTO;
                     }
                 }
             }
@@ -113,7 +116,7 @@ public class NewVisitService {
 //            userInformation.put("Username", byPhoneNum.getUserName());
 //        }
 
-        return userInformation;
+        return searchUserInfoDTO;
     }
 
     public void setVisit(VisitTrackerDTO visitTrackerDTO, String phoneNum, String username) {
