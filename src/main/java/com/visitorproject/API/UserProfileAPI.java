@@ -116,11 +116,11 @@ public class UserProfileAPI {
         return searchedSociety;
     }
 
-    @PostMapping("set-visit")
-    public void setVisit(@RequestHeader("Authorization") String authorizationHeader, @RequestBody VisitTrackerDTO visitTrackerDTO, @RequestParam String phoneNum) {
-        String token = extractJwtToken(authorizationHeader);
-        String username = getUsername(token);
-        newVisitService.setVisit(visitTrackerDTO, phoneNum, username);
+    @PostMapping("/set-visit")
+    public void setVisit(@RequestParam String visitorUsername, @RequestParam String ownerUsername, @RequestBody VisitTrackerDTO visitTrackerDTO) {
+//        String token = extractJwtToken(authorizationHeader);
+//        String username = getUsername(token);
+        newVisitService.setVisit(visitorUsername, ownerUsername, visitTrackerDTO);
     }
 
 

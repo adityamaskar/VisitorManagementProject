@@ -10,11 +10,13 @@ import com.visitorproject.entity.VisitTracker;
 import com.visitorproject.repo.UserAdressesRepo;
 import com.visitorproject.repo.UserProfileRepo;
 import com.visitorproject.repo.UserVehicleRepo;
+import com.visitorproject.repo.UserVisitTrackerRepo;
 import net.bytebuddy.implementation.bytecode.Throw;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.context.Theme;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -29,6 +31,9 @@ public class NewVisitService {
 
     @Autowired
     private UserVehicleRepo userVehicleRepo;
+
+    @Autowired
+    private UserVisitTrackerRepo userVisitTrackerRepo;
 
 
     public SearchUserInfoDTO searchSociety(String firstName, String phoneNum, String societyName, String addressName, String currentUsername) {
@@ -119,23 +124,63 @@ public class NewVisitService {
         return searchUserInfoDTO;
     }
 
-    public void setVisit(VisitTrackerDTO visitTrackerDTO, String phoneNum, String username) {
-        UserProfile byPhoneNum = userProfileRepo.findByPhoneNum(phoneNum);
-        UserAddresses addressByAddressId = userAdressesRepo.findById(visitTrackerDTO.getOwnerAddressId()).get();
-        Vehicles visitorVehicle = userVehicleRepo.findById(visitTrackerDTO.getVisitorVehicleId()).get();
-        if (byPhoneNum == null) {
-            throw new RuntimeException("user mobile num incorrect");
+    public void setVisit(String visitorUsername, String ownerUsername, VisitTrackerDTO visitTrackerDTO) {
+        validateIMPData(visitorUsername, ownerUsername, visitTrackerDTO);
+
+        UserProfile visitorProfile = userProfileRepo.findByUserName(visitorUsername);
+        UserProfile ownerProfile = userProfileRepo.findByUserName(ownerUsername);
+        UserAddresses userAddresses;
+        try {
+            userAddresses = ownerProfile.getUserAddresses().stream().filter(x -> x.getAddressName().equalsIgnoreCase(visitTrackerDTO.getAddressName())).collect(Collectors.toList()).get(0);
+            visitorProfile.getVehiclesList().stream().filter(x -> x.getVehicleName().equalsIgnoreCase(visitTrackerDTO.getVisitorVehicleName())).collect(Collectors.toList()).get(0);
+        } catch (Exception ex) {
+            throw new RuntimeException("Issue in the User Address or the Visitor vehicle details");
         }
-        //continue this--------
-//        if(byPhoneNum.)
-        VisitTracker visitTrackerObj = VisitTracker.builder().visitorUsername(username)
-                .ownerUsername(byPhoneNum.getUserName())
-                .ownerAddressId(visitTrackerDTO.getOwnerAddressId())
-                .isVehiclePresent(visitTrackerDTO.getIsVehiclePresent())
-                .visitorVehicleId(visitTrackerDTO.getVisitorVehicleId())
-                .isShortVisit(visitTrackerDTO.getIsShortVisit())
-                .visitDateTime(visitTrackerDTO.getVisitDateTime())
-                .exitDateTime(visitTrackerDTO.getExitDateTime())
-                .NumberOfVisitors(visitTrackerDTO.getNumberOfVisitors()).build();
+
+        try {
+            VisitTracker visitTrackerObj = VisitTracker.builder().visitorUsername(visitorUsername)
+                    .version(1)
+                    .visitorUsername(visitorUsername)
+                    .ownerUsername(ownerUsername)
+                    .ownerAddressId(userAddresses.getId())
+                    .visitDateTime(visitTrackerDTO.getVisitDateTime())
+                    .exitDateTime(visitTrackerDTO.getExitDateTime())
+                    .dateTimeOfVisitSchedule(LocalDateTime.now())
+                    .visitType(visitTrackerDTO.getVisitType())
+                    .NumberOfVisitors(visitTrackerDTO.getNumberOfVisitors())
+                    .isVehiclePresent(visitTrackerDTO.getIsVehiclePresent())
+                    .visitorVehicleName(visitTrackerDTO.getVisitorVehicleName()).build();
+
+            VisitTracker save = userVisitTrackerRepo.save(visitTrackerObj);
+            visitTrackerObj.setAuthCode(generateUniqueAuthNumber());
+            visitTrackerObj.setOwnerApproval(false);
+        } catch (Exception ex) {
+            throw new RuntimeException("Something Went wrong while saving object");
+        }
+
+    }
+
+    public static String generateUniqueAuthNumber() {
+        UUID uuid = UUID.randomUUID();
+        String uniqueNumber = "EN" + uuid.toString().replace("-", "").substring(0, 6);
+        return uniqueNumber;
+    }
+
+    private void validateIMPData(String visitorUsername, String ownerUsername, VisitTrackerDTO visitTrackerDTO) {
+        if (visitorUsername == ownerUsername) {
+            throw new RuntimeException("Owner and Visitor can't be same");
+        }
+        if (visitTrackerDTO.getVisitDateTime() == null && visitTrackerDTO.getExitDateTime() == null) {
+            throw new RuntimeException("Visit or exit time can't be null");
+        }
+        if (LocalDateTime.now().isAfter(visitTrackerDTO.getVisitDateTime())) {
+            throw new RuntimeException("Visit time can't be in past");
+        }
+        if (!visitTrackerDTO.getVisitDateTime().isBefore(visitTrackerDTO.getExitDateTime())) {
+            throw new RuntimeException("Exit time should be After the visit time");
+        }
+        if (visitTrackerDTO.getVisitType() == null) {
+            throw new RuntimeException("Please specify Visit type");
+        }
     }
 }

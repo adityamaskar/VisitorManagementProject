@@ -1,5 +1,6 @@
 package com.visitorproject.dtos;
 
+import com.visitorproject.entity.VisitType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,32 +16,41 @@ import java.time.LocalDateTime;
 @Builder
 public class VisitTrackerDTO {
 
+    private Long id;
+
+    private Integer version;
+
     private String visitorUsername;
 
     private String ownerUsername;
 
-    private Long ownerAddressId;
+    private String addressName; // to save the AddressId in the tracker Object
 
     private LocalDateTime visitDateTime;
 
     private LocalDateTime exitDateTime;
 
-    private Boolean isShortVisit;
+    private LocalDateTime dateTimeOfVisitSchedule;
+
+    private VisitType visitType;
 
     private LocalDateTime actualVisitDateTime;
 
     private LocalDateTime actualExitDateTime;
 
-    private Integer numberOfVisitors;
+    private String AuthCode;
+
+    private Integer NumberOfVisitors;
 
     private Boolean isVehiclePresent;
 
-    private Long visitorVehicleId;
+    private String visitorVehicleName;
 
     private Boolean ownerApproval;
+
+    private LocalDateTime approvalOrRejectionTime;
 
     private String rejectionReason;
 
     private String extraManualComments;
-
 }
