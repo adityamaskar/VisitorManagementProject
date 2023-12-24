@@ -132,7 +132,9 @@ public class NewVisitService {
         UserAddresses userAddresses;
         try {
             userAddresses = ownerProfile.getUserAddresses().stream().filter(x -> x.getAddressName().equalsIgnoreCase(visitTrackerDTO.getAddressName())).collect(Collectors.toList()).get(0);
-            visitorProfile.getVehiclesList().stream().filter(x -> x.getVehicleName().equalsIgnoreCase(visitTrackerDTO.getVisitorVehicleName())).collect(Collectors.toList()).get(0);
+            if (visitTrackerDTO.getIsVehiclePresent() == true) {
+                visitorProfile.getVehiclesList().stream().filter(x -> x.getVehicleName().equalsIgnoreCase(visitTrackerDTO.getVisitorVehicleName())).collect(Collectors.toList()).get(0);
+            }
         } catch (Exception ex) {
             throw new RuntimeException("Issue in the User Address or the Visitor vehicle details");
         }
@@ -181,6 +183,12 @@ public class NewVisitService {
         }
         if (visitTrackerDTO.getVisitType() == null) {
             throw new RuntimeException("Please specify Visit type");
+        }
+        if (visitTrackerDTO.getIsVehiclePresent() == true && visitTrackerDTO.getVisitorVehicleName() == null) {
+            throw new RuntimeException("Vehicle name is empty");
+        }
+        if (visitTrackerDTO.getIsVehiclePresent() == false && visitTrackerDTO.getVisitorVehicleName() != null) {
+            throw new RuntimeException("You have selected vehicle as not present but provided vehicle name");
         }
     }
 }
