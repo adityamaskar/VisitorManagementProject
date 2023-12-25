@@ -17,5 +17,6 @@ public class SearchUserInfoDTO {
     private String lastName;
     private List<UserAddressesDTO> societyAvailableWithInfo;
     private String message;
+    private String userName;
 
 }

@@ -61,6 +61,7 @@ public class NewVisitService {
                     SearchUserInfoDTO userInfoDTO = searchUserInfoDTO.builder().message("Society Details as Below")
                             .result("found").lastName(byPhoneNum.getLastName())
                             .firstName(byPhoneNum.getFirstName())
+                            .userName(byPhoneNum.getUserName())
                             .societyAvailableWithInfo(userWithSameAddressName.stream().map(x -> UserAddressesDTO.userAddressesToUserAddressDTO(x)).collect(Collectors.toList()))
                             .build();
 
@@ -70,6 +71,7 @@ public class NewVisitService {
                         SearchUserInfoDTO userInfoDTO = searchUserInfoDTO.builder().message("Found Above address if the required address not available please contact owner to add it")
                                 .result("found").lastName(byPhoneNum.getLastName())
                                 .firstName(byPhoneNum.getFirstName())
+                                .userName(byPhoneNum.getUserName())
                                 .societyAvailableWithInfo(userWithSameSociety.stream().map(x -> UserAddressesDTO.userAddressesToUserAddressDTO(x)).collect(Collectors.toList()))
                                 .build();
 
@@ -79,6 +81,7 @@ public class NewVisitService {
                                         "                                \"If desired addresses not there connect owner to Add it")
                                 .result("multiple found").lastName(byPhoneNum.getLastName())
                                 .firstName(byPhoneNum.getFirstName())
+                                .userName(byPhoneNum.getUserName())
                                 .societyAvailableWithInfo(userWithSameSociety.stream().map(x -> UserAddressesDTO.userAddressesToUserAddressDTO(x)).collect(Collectors.toList()))
                                 .build();
 
@@ -151,11 +154,13 @@ public class NewVisitService {
                     .visitType(visitTrackerDTO.getVisitType())
                     .NumberOfVisitors(visitTrackerDTO.getNumberOfVisitors())
                     .isVehiclePresent(visitTrackerDTO.getIsVehiclePresent())
-                    .visitorVehicleName(visitTrackerDTO.getVisitorVehicleName()).build();
+                    .visitorVehicleName(visitTrackerDTO.getVisitorVehicleName())
+                    .build();
 
             VisitTracker save = userVisitTrackerRepo.save(visitTrackerObj);
             visitTrackerObj.setAuthCode(generateUniqueAuthNumber());
             visitTrackerObj.setOwnerApproval(false);
+            userVisitTrackerRepo.save(visitTrackerObj);
         } catch (Exception ex) {
             throw new RuntimeException("Something Went wrong while saving object");
         }
