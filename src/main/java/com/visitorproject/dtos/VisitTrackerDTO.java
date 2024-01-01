@@ -16,15 +16,17 @@ import java.time.LocalDateTime;
 @Builder
 public class VisitTrackerDTO {
 
-    private Long id;
-
     private Integer version;
 
     private String visitorUsername;
 
+    private String fullName;
+
     private String ownerUsername;
 
-    private String addressName; // to save the AddressId in the tracker Object
+    private Long ownerAddressId;
+
+    private String ownerAddressName;
 
     private LocalDateTime visitDateTime;
 

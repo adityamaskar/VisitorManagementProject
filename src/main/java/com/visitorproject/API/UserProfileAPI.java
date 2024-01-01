@@ -123,5 +123,19 @@ public class UserProfileAPI {
         newVisitService.setVisit(visitorUsername, ownerUsername, visitTrackerDTO);
     }
 
+    @GetMapping("/received-approval-requests")
+    public List<VisitTrackerDTO> receivedApprovalRequest(@RequestHeader("Authorization") String authorizationHeader) {
+        String token = extractJwtToken(authorizationHeader);
+        String username = getUsername(token);
+        List<VisitTrackerDTO> pendingrequestsForApproval = newVisitService.getPendingrequestsForApproval(username);
+        return pendingrequestsForApproval;
+    }
 
+    @GetMapping("/approved-requests-pending-visit")
+    public List<VisitTrackerDTO> approvedRequestsWhichArePending(@RequestHeader("Authorization") String authorizationHeader) {
+        String token = extractJwtToken(authorizationHeader);
+        String username = getUsername(token);
+        List<VisitTrackerDTO> approvedRequestsWhichArePending = newVisitService.approvedRequestsWhichArePending(username);
+        return approvedRequestsWhichArePending;
+    }
 }
