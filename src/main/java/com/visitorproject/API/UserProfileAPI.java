@@ -3,14 +3,20 @@ package com.visitorproject.API;
 import com.visitorproject.dtos.*;
 import com.visitorproject.entity.AuthRequest;
 import com.visitorproject.entity.UserProfile;
+import com.visitorproject.filter.JwtService;
 import com.visitorproject.service.NewVisitService;
 import com.visitorproject.service.UserAddressesService;
 import com.visitorproject.service.UserProfileService;
 import com.visitorproject.service.UserVehiclesService;
-import com.visitorproject.util.JWTUtil;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +31,9 @@ public class UserProfileAPI {
     private UserProfileService userProfileService;
 
     @Autowired
+    private UserDetailsService userDetailsService;
+
+    @Autowired
     private UserAddressesService userAddressesService;
 
     @Autowired
@@ -37,7 +46,9 @@ public class UserProfileAPI {
     private NewVisitService newVisitService;
 
     @Autowired
-    private JWTUtil jwtUtil;
+    private JwtService jwtHelper;
+
+//    private Logger logger = LoggerFactory.getLogger(getClass());
 
     @GetMapping("/all-usernames")
     public List<String> getAllUsers() {
@@ -86,8 +97,9 @@ public class UserProfileAPI {
 
     @GetMapping("/test/{token}")
     public String getUsername(@PathVariable String token) {
-        return jwtUtil.extractUsername(token);
+        return null; //jwtHelper.getUsernameFromToken(token);
     }
+
 
     private String extractJwtToken(String authorizationHeader) {
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
@@ -97,15 +109,36 @@ public class UserProfileAPI {
     }
 
     @PostMapping("/authenticate")
+//    @CircuitBreaker(name = "authentication" , fallbackMethod = "fallbackAuth")
+//    @TimeLimiter(name = "authentication")
+//    @Retry(name = "authentication")
     public String generateToken(@RequestBody AuthRequest authRequest) throws Exception {
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(authRequest.getUserName(), authRequest.getPassword())
-            );
-        } catch (Exception ex) {
-            throw new Exception("inavalid username/password");
+
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUserName(), authRequest.getPassword()));
+        if (authentication.isAuthenticated()) {
+            return jwtHelper.generateToken(authRequest.getUserName());
+        } else {
+            throw new UsernameNotFoundException("invalid user request !");
         }
-        return jwtUtil.generateToken(authRequest.getUserName());
+
+//        this.doAuthenticate(authRequest.getUserName(), authRequest.getPassword());
+//        UserDetails userDetails = userDetailsService.loadUserByUsername(authRequest.getUserName());
+//        return this.jwtHelper.generateToken(userDetails);
+    }
+    private void doAuthenticate(String username, String password) {
+
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(username, password);
+        try {
+            authenticationManager.authenticate(authentication);
+
+
+        } catch (BadCredentialsException e) {
+            throw new BadCredentialsException(" Invalid Username or Password  !!");
+        }
+    }
+
+    public String fallbackAuth(AuthRequest authRequest, RuntimeException runtimeException){
+        return "Oops some Error occurred try after some time";
     }
 
     @GetMapping("/search-home")

@@ -4,13 +4,13 @@ import com.visitorproject.entity.Gender;
 import com.visitorproject.entity.UserProfile;
 import com.visitorproject.entity.VehicleType;
 import com.visitorproject.entity.Vehicles;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import java.util.List;
 
 
