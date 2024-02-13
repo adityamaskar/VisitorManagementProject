@@ -42,19 +42,32 @@ public class SecurityConfig {
     // Configuring HttpSecurity
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http.csrf().disable()
-                .authorizeHttpRequests()
-                .requestMatchers( "/user/authenticate").permitAll()
-                .and()
-                .authorizeHttpRequests().requestMatchers("/user/**").authenticated()
-                .and()
-                .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
-                .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        return http.csrf(csrf -> csrf.disable())
+                .authorizeRequests()
+                .requestMatchers( "/user/authenticate")
+                .permitAll()
+                .anyRequest()
+                .authenticated()
                 .and()
                 .authenticationProvider(authenticationProvider())
-                .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(authFilter,UsernamePasswordAuthenticationFilter.class)
                 .build();
+//                .build();
+
+//                .csrf().disable()
+//                .authorizeHttpRequests()
+//                .requestMatchers( "/user/authenticate").permitAll()
+//                .and()
+//
+//                .authorizeHttpRequests().requestMatchers("/user/**").authenticated()
+//                .and()
+//                .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
+//                .sessionManagement()
+//                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+//                .and()
+//                .authenticationProvider(authenticationProvider())
+//                .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
+//                .build();
     }
 
     // Password Encoding
