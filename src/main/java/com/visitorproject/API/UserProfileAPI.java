@@ -8,8 +8,10 @@ import com.visitorproject.service.NewVisitService;
 import com.visitorproject.service.UserAddressesService;
 import com.visitorproject.service.UserProfileService;
 import com.visitorproject.service.UserVehiclesService;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+//import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 
+//import io.github.resilience4j.retry.annotation.Retry;
+//import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -97,7 +99,7 @@ public class UserProfileAPI {
 
     @GetMapping("/test/{token}")
     public String getUsername(@PathVariable String token) {
-        return null; //jwtHelper.getUsernameFromToken(token);
+        return jwtHelper.extractUsername(token);
     }
 
 
@@ -120,29 +122,15 @@ public class UserProfileAPI {
         } else {
             throw new UsernameNotFoundException("invalid user request !");
         }
-
-//        this.doAuthenticate(authRequest.getUserName(), authRequest.getPassword());
-//        UserDetails userDetails = userDetailsService.loadUserByUsername(authRequest.getUserName());
-//        return this.jwtHelper.generateToken(userDetails);
     }
-    private void doAuthenticate(String username, String password) {
 
-        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(username, password);
-        try {
-            authenticationManager.authenticate(authentication);
-
-
-        } catch (BadCredentialsException e) {
-            throw new BadCredentialsException(" Invalid Username or Password  !!");
-        }
-    }
 
     public String fallbackAuth(AuthRequest authRequest, RuntimeException runtimeException){
         return "Oops some Error occurred try after some time";
     }
 
     @GetMapping("/search-home")
-    public SearchUserInfoDTO searchHome(@RequestHeader("Authorization") String authorizationHeader, @RequestParam String firstName, @RequestParam String phoneNum, @RequestParam String societyName, @RequestParam(required = false) String addressName) {
+    public SearchUserInfoDTO searchHome(@RequestHeader("Authorization") String authorizationHeader, @RequestParam String firstName, @RequestParam String phoneNum, @RequestParam String societyName, @RequestParam(required = false) String addressName) throws RuntimeException{
         String token = extractJwtToken(authorizationHeader);
         String currentUsername = getUsername(token);
         SearchUserInfoDTO searchedSociety = newVisitService.searchSociety(firstName, phoneNum, societyName, addressName, currentUsername);
