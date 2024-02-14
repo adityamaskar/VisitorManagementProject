@@ -44,30 +44,17 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.csrf(csrf -> csrf.disable())
                 .authorizeRequests()
-                .requestMatchers( "/user/authenticate")
+                .requestMatchers( "/user/authenticate","/user/new-user")
                 .permitAll()
                 .anyRequest()
                 .authenticated()
                 .and()
+                .exceptionHandling()
+                .and()
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(authFilter,UsernamePasswordAuthenticationFilter.class)
                 .build();
-//                .build();
-
-//                .csrf().disable()
-//                .authorizeHttpRequests()
-//                .requestMatchers( "/user/authenticate").permitAll()
-//                .and()
-//
-//                .authorizeHttpRequests().requestMatchers("/user/**").authenticated()
-//                .and()
-//                .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
-//                .sessionManagement()
-//                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-//                .and()
-//                .authenticationProvider(authenticationProvider())
-//                .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
-//                .build();
     }
 
     // Password Encoding

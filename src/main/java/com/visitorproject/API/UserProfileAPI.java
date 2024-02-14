@@ -12,9 +12,10 @@ import com.visitorproject.service.UserVehiclesService;
 
 //import io.github.resilience4j.retry.annotation.Retry;
 //import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -50,7 +51,7 @@ public class UserProfileAPI {
     @Autowired
     private JwtService jwtHelper;
 
-//    private Logger logger = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @GetMapping("/all-usernames")
     public List<String> getAllUsers() {
@@ -115,13 +116,23 @@ public class UserProfileAPI {
 //    @TimeLimiter(name = "authentication")
 //    @Retry(name = "authentication")
     public String generateToken(@RequestBody AuthRequest authRequest) throws Exception {
-
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUserName(), authRequest.getPassword()));
-        if (authentication.isAuthenticated()) {
-            return jwtHelper.generateToken(authRequest.getUserName());
-        } else {
-            throw new UsernameNotFoundException("invalid user request !");
-        }
+        Authentication authentication = null;
+//        try {
+            authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUserName(), authRequest.getPassword()));
+            if (authentication.isAuthenticated()) {
+                return jwtHelper.generateToken(authRequest.getUserName());
+            } else {
+                throw new UsernameNotFoundException("Invalid user request !");
+            }
+//        }catch (InternalAuthenticationServiceException exception){
+//            logger.error(exception.getMessage() + " : " + exception);
+//            throw new RuntimeException("Username or Password is wrong");
+//        }
+//        catch (Exception exception){
+//            logger.error(exception.getMessage() + " : " + exception);
+//            throw new RuntimeException("Some error occurred");
+//        }
+//        return null;
     }
 
 

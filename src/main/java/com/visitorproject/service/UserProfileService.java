@@ -52,8 +52,14 @@ public class UserProfileService implements UserDetailsService {
     }
 
     public UserDetails loadUserByUsername(String userName) {
-        UserProfile byUserName = userProfileRepo.findByUserName(userName);
-        return new User(byUserName.getUserName(), byUserName.getPassword(), new ArrayList<>());
+        UserProfile byUserName;
+        try {
+            byUserName = userProfileRepo.findByUserName(userName);
+            return new User(byUserName.getUserName(), byUserName.getPassword(), new ArrayList<>());
+        }catch (NullPointerException exception){
+            logger.error("Username or Password is wrong");
+            throw new RuntimeException("Username or Password is wrong");
+        }
     }
 
     public List<UserProfile> getAllProfilesWithPass() {
@@ -88,7 +94,7 @@ public class UserProfileService implements UserDetailsService {
         if (userAddressesDTO != null) {
             userAddressesList = userAddressesDTO.stream().map(x -> UserAddressesDTO.userAddressDTOtoUserAddress(x)).collect(Collectors.toList());
         } else {
-            logger.error("Address is Empty");
+            logger.warn("Address is Empty");
         }
 
         //Creating the Vehicles Entity
@@ -97,7 +103,7 @@ public class UserProfileService implements UserDetailsService {
         if (vehiclesDTOS != null) {
             vehiclesList = vehiclesDTOS.stream().map(x -> VehiclesDTO.vehicleDTOtoVehicle(x)).collect(Collectors.toList());
         } else {
-            logger.error("Vehicle is Empty");
+            logger.warn("Vehicle is Empty");
         }
 
         UserProfile newUser = UserProfile.builder()
