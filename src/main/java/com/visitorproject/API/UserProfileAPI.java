@@ -8,10 +8,10 @@ import com.visitorproject.service.NewVisitService;
 import com.visitorproject.service.UserAddressesService;
 import com.visitorproject.service.UserProfileService;
 import com.visitorproject.service.UserVehiclesService;
-//import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 
-//import io.github.resilience4j.retry.annotation.Retry;
-//import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
+import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +23,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/user")
@@ -112,7 +113,7 @@ public class UserProfileAPI {
     }
 
     @PostMapping("/authenticate")
-//    @CircuitBreaker(name = "authentication" , fallbackMethod = "fallbackAuth")
+    @CircuitBreaker(name = "authentication" , fallbackMethod = "fallbackAuth")
 //    @TimeLimiter(name = "authentication")
 //    @Retry(name = "authentication")
     public String generateToken(@RequestBody AuthRequest authRequest) throws Exception {
@@ -120,7 +121,9 @@ public class UserProfileAPI {
 //        try {
             authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUserName(), authRequest.getPassword()));
             if (authentication.isAuthenticated()) {
-                return jwtHelper.generateToken(authRequest.getUserName());
+                String token = jwtHelper.generateToken(authRequest.getUserName());
+                userProfileService.sendNotificationOnAuth(authRequest.getUserName());
+                return token;
             } else {
                 throw new UsernameNotFoundException("Invalid user request !");
             }
@@ -169,5 +172,22 @@ public class UserProfileAPI {
         String username = getUsername(token);
         List<VisitTrackerDTO> approvedRequestsWhichArePending = newVisitService.approvedRequestsWhichArePending(username);
         return approvedRequestsWhichArePending;
+    }
+
+    @GetMapping("/test-micro")
+    @CircuitBreaker(name = "test1", fallbackMethod = "fallbackMethod1")
+    @TimeLimiter(name = "test1")
+    @Retry(name = "test1")
+    public CompletableFuture<String> testMicro() {
+        return CompletableFuture.supplyAsync(this::testMicroString);
+    }
+
+    public String testMicroString() {
+        return "I am working fine";
+    }
+
+    // Fallback method for circuit breaker
+    public CompletableFuture<String> fallbackMethod1(RuntimeException runtimeException) {
+        return CompletableFuture.completedFuture("Fallback method triggered: " + runtimeException.getMessage());
     }
 }

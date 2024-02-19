@@ -1,5 +1,6 @@
 package com.visitorproject.service;
 
+import com.visitorproject.dtos.AuthCompleteEvent;
 import com.visitorproject.dtos.UserAddressesDTO;
 import com.visitorproject.dtos.UserProfileDto;
 import com.visitorproject.dtos.VehiclesDTO;
@@ -13,6 +14,7 @@ import com.visitorproject.repo.UserVisitTrackerRepo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -37,6 +39,9 @@ public class UserProfileService implements UserDetailsService {
 
     @Autowired
     private UserVisitTrackerRepo userVisitTrackerRepo;
+
+    @Autowired
+    private KafkaTemplate<String, AuthCompleteEvent> kafkaTemplate;
 
 
     private static final Logger logger = LoggerFactory.getLogger(UserProfileService.class);
@@ -135,6 +140,12 @@ public class UserProfileService implements UserDetailsService {
         if (byPhoneNum != null) {
             throw new RuntimeException("Phone Number already exists");
         }
+    }
+
+    public void sendNotificationOnAuth(String userName){
+        UserProfile userByUserName = getUserByUserName(userName);
+        kafkaTemplate.send(kafkaTemplate.getDefaultTopic(),
+                new AuthCompleteEvent(userName, userByUserName.getFirstName() + " " + userByUserName.getLastName()));
     }
 
 
