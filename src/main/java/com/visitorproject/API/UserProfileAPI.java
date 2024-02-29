@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -118,28 +119,30 @@ public class UserProfileAPI {
 //    @Retry(name = "authentication")
     public String generateToken(@RequestBody AuthRequest authRequest) throws Exception {
         Authentication authentication = null;
-//        try {
+        try {
             authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUserName(), authRequest.getPassword()));
             if (authentication.isAuthenticated()) {
                 String token = jwtHelper.generateToken(authRequest.getUserName());
-                userProfileService.sendNotificationOnAuth(authRequest.getUserName());
+//                userProfileService.sendNotificationOnAuth(authRequest.getUserName());
                 return token;
             } else {
                 throw new UsernameNotFoundException("Invalid user request !");
             }
-//        }catch (InternalAuthenticationServiceException exception){
-//            logger.error(exception.getMessage() + " : " + exception);
-//            throw new RuntimeException("Username or Password is wrong");
-//        }
-//        catch (Exception exception){
-//            logger.error(exception.getMessage() + " : " + exception);
-//            throw new RuntimeException("Some error occurred");
-//        }
-//        return null;
+        }catch (InternalAuthenticationServiceException exception){
+            logger.error(exception.getMessage() + " : " + exception);
+            throw new RuntimeException("Username or Password is wrong");
+        }
+        catch (Exception exception){
+            logger.error(exception.getMessage() + " : " + exception);
+            throw new RuntimeException("Some error occurred");
+        }
     }
 
 
     public String fallbackAuth(AuthRequest authRequest, RuntimeException runtimeException){
+        if(runtimeException.getMessage().equalsIgnoreCase("Username or Password is wrong")){
+            return "Username or Password is wrong";
+        }
         return "Oops some Error occurred try after some time";
     }
 

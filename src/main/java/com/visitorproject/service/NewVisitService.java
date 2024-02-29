@@ -6,6 +6,7 @@ import com.visitorproject.dtos.VisitTrackerDTO;
 import com.visitorproject.entity.UserAddresses;
 import com.visitorproject.entity.UserProfile;
 import com.visitorproject.entity.VisitTracker;
+import com.visitorproject.entity.VisitType;
 import com.visitorproject.repo.UserAdressesRepo;
 import com.visitorproject.repo.UserProfileRepo;
 import com.visitorproject.repo.UserVehicleRepo;
@@ -131,7 +132,7 @@ public class NewVisitService {
         UserProfile ownerProfile = userProfileRepo.findByUserName(ownerUsername);
         UserAddresses userAddresses;
         try {
-            userAddresses = ownerProfile.getUserAddresses().stream().filter(x -> x.getAddressName().equalsIgnoreCase(visitTrackerDTO.getOwnerAddressName())).collect(Collectors.toList()).get(0);
+            userAddresses = ownerProfile.getUserAddresses().stream().filter(x -> x.getAddressName().equalsIgnoreCase(visitTrackerDTO.getAddressName())).collect(Collectors.toList()).get(0);
             if (visitTrackerDTO.getIsVehiclePresent() == true) {
                 visitorProfile.getVehiclesList().stream().filter(x -> x.getVehicleName().equalsIgnoreCase(visitTrackerDTO.getVisitorVehicleName())).collect(Collectors.toList()).get(0);
             }
@@ -174,7 +175,10 @@ public class NewVisitService {
         if (visitorUsername == ownerUsername) {
             throw new RuntimeException("Owner and Visitor can't be same");
         }
-        if (visitTrackerDTO.getVisitDateTime() == null && visitTrackerDTO.getExitDateTime() == null) {
+        if(visitTrackerDTO.getVisitType().equals(VisitType.None)){
+            throw new RuntimeException("Select the Visit Type");
+        }
+        if (visitTrackerDTO.getVisitDateTime() == null || visitTrackerDTO.getExitDateTime() == null) {
             throw new RuntimeException("Visit or exit time can't be null");
         }
         if (LocalDateTime.now().isAfter(visitTrackerDTO.getVisitDateTime())) {
@@ -214,7 +218,7 @@ public class NewVisitService {
                     .rejectionReason(visitTracker.getRejectionReason())
                     .NumberOfVisitors(visitTracker.getNumberOfVisitors())
                     .ownerUsername(visitTracker.getOwnerUsername())
-                    .ownerAddressName(addressName)
+                    .AddressName(addressName)
                     .dateTimeOfVisitSchedule(visitTracker.getDateTimeOfVisitSchedule())
                     .visitDateTime(visitTracker.getVisitDateTime())
                     .exitDateTime(visitTracker.getExitDateTime())
@@ -250,7 +254,7 @@ public class NewVisitService {
                     .rejectionReason(visitTracker.getRejectionReason())
                     .NumberOfVisitors(visitTracker.getNumberOfVisitors())
                     .ownerUsername(visitTracker.getOwnerUsername())
-                    .ownerAddressName(addressName)
+                    .AddressName(addressName)
                     .dateTimeOfVisitSchedule(visitTracker.getDateTimeOfVisitSchedule())
                     .visitDateTime(visitTracker.getVisitDateTime())
                     .exitDateTime(visitTracker.getExitDateTime())

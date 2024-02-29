@@ -26,7 +26,7 @@ public class VisitTrackerDTO {
 
     private Long ownerAddressId;
 
-    private String ownerAddressName;
+    private String AddressName;
 
     private LocalDateTime visitDateTime;
 
