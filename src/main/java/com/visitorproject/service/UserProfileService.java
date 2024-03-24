@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Timer;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,17 +44,23 @@ public class UserProfileService implements UserDetailsService {
     @Autowired
     private KafkaTemplate<String, AuthCompleteEvent> kafkaTemplate;
 
+    private final String regexForNumber = "^\\+\\d{7,}$";
+
 
     private static final Logger logger = LoggerFactory.getLogger(UserProfileService.class);
 
 
     public List<String> getAllProfiles() {
         List<UserProfile> listOfUsers = userProfileRepo.findAll();
-        List<String> userList = new ArrayList<>();
-        for (UserProfile userProfile : listOfUsers) {
-            userList.add(userProfile.getUserName());
-        }
-        return userList;
+//        List<String> userList = new ArrayList<>();
+
+//        for (UserProfile userProfile : listOfUsers) {
+//            userList.add(userProfile.getUserName());
+//        }
+
+//       with Stream API
+        List<String> list = listOfUsers.stream().map(o -> o.getUserName()).toList();
+        return list;
     }
 
     public UserDetails loadUserByUsername(String userName) {
@@ -139,6 +146,9 @@ public class UserProfileService implements UserDetailsService {
         UserProfile byPhoneNum = userProfileRepo.findByPhoneNum(userProfileDto.getPhoneNum());
         if (byPhoneNum != null) {
             throw new RuntimeException("Phone Number already exists");
+        }
+        if(!userProfileDto.getPhoneNum().matches(regexForNumber)){
+            throw new RuntimeException("Please provide correct Phone number");
         }
     }
 

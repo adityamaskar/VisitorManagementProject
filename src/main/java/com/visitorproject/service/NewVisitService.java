@@ -270,4 +270,44 @@ public class NewVisitService {
 
         return listResultDTO;
     }
+
+    public String handleApprovalRequest(VisitTrackerDTO visitTrackerDTO) {
+        if(visitTrackerDTO.getExtraManualComments() != null && !visitTrackerDTO.getOwnerApproval() && visitTrackerDTO.getApprovalOrRejectionTime() == null) {
+            List<VisitTracker> byOwnerUsernameAndVisitorUsername = userVisitTrackerRepo.findByOwnerUsernameAndVisitorUsername(visitTrackerDTO.getOwnerUsername(), visitTrackerDTO.getVisitorUsername());
+            VisitTracker visitTracker = null;
+            if(byOwnerUsernameAndVisitorUsername.size() > 1){
+                visitTracker = byOwnerUsernameAndVisitorUsername.stream().filter((x) -> x.getVisitDateTime().equals(visitTrackerDTO.getVisitDateTime())).collect(Collectors.toList()).get(0);
+            }
+            else {
+                visitTracker = byOwnerUsernameAndVisitorUsername.get(0);
+            }
+            visitTracker.setExtraManualComments(visitTrackerDTO.getExtraManualComments());
+            visitTracker.setOwnerApproval(true);
+            visitTracker.setVersion(visitTracker.getVersion() +1 );
+            visitTracker.setApprovalOrRejectionTime(LocalDateTime.now());
+            userVisitTrackerRepo.save(visitTracker);
+            return "Processed";
+        }
+        return "Not Processed";
+    }
+
+    public String handleRejectionRequest(VisitTrackerDTO visitTrackerDTO) {
+        List<VisitTracker> byOwnerUsernameAndVisitorUsername = userVisitTrackerRepo.findByOwnerUsernameAndVisitorUsername(visitTrackerDTO.getOwnerUsername(), visitTrackerDTO.getVisitorUsername());
+        VisitTracker visitTracker = null;
+        if(byOwnerUsernameAndVisitorUsername.size() > 1){
+            visitTracker = byOwnerUsernameAndVisitorUsername.stream().filter((x) -> x.getVisitDateTime().equals(visitTrackerDTO.getVisitDateTime())).collect(Collectors.toList()).get(0);
+        }
+        else {
+            visitTracker = byOwnerUsernameAndVisitorUsername.get(0);
+        }
+        if( !visitTracker.getOwnerApproval() && visitTracker.getApprovalOrRejectionTime() == null) {
+            visitTracker.setRejectionReason(visitTrackerDTO.getRejectionReason());
+            visitTracker.setOwnerApproval(false);
+            visitTracker.setVersion(visitTracker.getVersion() +1 );
+            visitTracker.setApprovalOrRejectionTime(LocalDateTime.now());
+            userVisitTrackerRepo.save(visitTracker);
+            return "Processed";
+        }
+        return "Not Processed";
+    }
 }

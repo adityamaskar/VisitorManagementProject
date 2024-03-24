@@ -15,5 +15,6 @@ public interface UserVisitTrackerRepo extends JpaRepository<VisitTracker, Long> 
 
     List<VisitTracker> findByOwnerUsernameAndOwnerApprovalIsTrue(String ownerUsername);
 
+    List<VisitTracker> findByOwnerUsernameAndVisitorUsername(String ownerUsername, String visitorUsername);
 
 }

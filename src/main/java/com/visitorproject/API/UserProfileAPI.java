@@ -3,6 +3,7 @@ package com.visitorproject.API;
 import com.visitorproject.dtos.*;
 import com.visitorproject.entity.AuthRequest;
 import com.visitorproject.entity.UserProfile;
+import com.visitorproject.entity.VisitTracker;
 import com.visitorproject.filter.JwtService;
 import com.visitorproject.service.NewVisitService;
 import com.visitorproject.service.UserAddressesService;
@@ -15,6 +16,8 @@ import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -114,27 +117,32 @@ public class UserProfileAPI {
     }
 
     @PostMapping("/authenticate")
-    @CircuitBreaker(name = "authentication" , fallbackMethod = "fallbackAuth")
+//    @CircuitBreaker(name = "authentication" , fallbackMethod = "fallbackAuth")
 //    @TimeLimiter(name = "authentication")
 //    @Retry(name = "authentication")
-    public String generateToken(@RequestBody AuthRequest authRequest) throws Exception {
+    public ResponseEntity<String> generateToken(@RequestBody AuthRequest authRequest) throws Exception {
         Authentication authentication = null;
         try {
             authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUserName(), authRequest.getPassword()));
             if (authentication.isAuthenticated()) {
                 String token = jwtHelper.generateToken(authRequest.getUserName());
 //                userProfileService.sendNotificationOnAuth(authRequest.getUserName());
-                return token;
+                logger.info("User  " + '"' + authRequest.getUserName() + '"' + " is authenticated");
+                return new ResponseEntity<>(token, HttpStatus.ACCEPTED);
             } else {
                 throw new UsernameNotFoundException("Invalid user request !");
             }
         }catch (InternalAuthenticationServiceException exception){
             logger.error(exception.getMessage() + " : " + exception);
-            throw new RuntimeException("Username or Password is wrong");
+            throw new IllegalArgumentException("Username or Password is wrong");
         }
         catch (Exception exception){
             logger.error(exception.getMessage() + " : " + exception);
-            throw new RuntimeException("Some error occurred");
+            if(exception.getMessage().equalsIgnoreCase("Bad credentials")){
+                throw new IllegalArgumentException("Username or Password is wrong");
+            }else {
+                throw new RuntimeException("Some error occurred");
+            }
         }
     }
 
@@ -177,20 +185,34 @@ public class UserProfileAPI {
         return approvedRequestsWhichArePending;
     }
 
-    @GetMapping("/test-micro")
-    @CircuitBreaker(name = "test1", fallbackMethod = "fallbackMethod1")
-    @TimeLimiter(name = "test1")
-    @Retry(name = "test1")
-    public CompletableFuture<String> testMicro() {
-        return CompletableFuture.supplyAsync(this::testMicroString);
+    @PostMapping("/handle-approval-request")
+    public String handleApprovalRequest( @RequestBody VisitTrackerDTO visitTrackerDTO){
+        System.out.println(visitTrackerDTO);
+        return newVisitService.handleApprovalRequest(visitTrackerDTO);
     }
 
-    public String testMicroString() {
-        return "I am working fine";
+    @PostMapping("/handle-rejection-request")
+    public String handleRejectionRequest( @RequestBody VisitTrackerDTO visitTrackerDTO){
+        System.out.println(visitTrackerDTO);
+        return newVisitService.handleRejectionRequest(visitTrackerDTO);
     }
+
+
+
+//    @GetMapping("/test-micro")
+//    @CircuitBreaker(name = "test1", fallbackMethod = "fallbackMethod1")
+//    @TimeLimiter(name = "test1")
+//    @Retry(name = "test1")
+//    public CompletableFuture<String> testMicro() {
+//        return CompletableFuture.supplyAsync(this::testMicroString);
+//    }
+//
+//    public String testMicroString() {
+//        return "I am working fine";
+//    }
 
     // Fallback method for circuit breaker
-    public CompletableFuture<String> fallbackMethod1(RuntimeException runtimeException) {
-        return CompletableFuture.completedFuture("Fallback method triggered: " + runtimeException.getMessage());
-    }
+//    public CompletableFuture<String> fallbackMethod1(RuntimeException runtimeException) {
+//        return CompletableFuture.completedFuture("Fallback method triggered: " + runtimeException.getMessage());
+//    }
 }
