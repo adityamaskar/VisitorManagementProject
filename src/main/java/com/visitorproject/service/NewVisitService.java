@@ -200,33 +200,36 @@ public class NewVisitService {
 
     public List<VisitTrackerDTO> getPendingrequestsForApproval(String ownerUsername) {
 
-        List<VisitTracker> byOwnerUsernameAndOwnerApprovalIsFalse = userVisitTrackerRepo.findByOwnerUsernameAndOwnerApprovalIsFalse(ownerUsername);
+        List<VisitTracker> byOwnerUsernameAndOwnerApprovalIsFalse = userVisitTrackerRepo.findByOwnerUsernameAndOwnerApprovalIsFalseAndRejectionTimeIsNull(ownerUsername);
         List<VisitTrackerDTO> listResultDTO = new ArrayList<>();
 
         for (VisitTracker visitTracker : byOwnerUsernameAndOwnerApprovalIsFalse) {
             UserProfile byUserNameVisitor = userProfileRepo.findByUserName(visitTracker.getVisitorUsername());
             UserProfile byUserNameOwner = userProfileRepo.findByUserName(visitTracker.getOwnerUsername());
             String addressName = byUserNameOwner.getUserAddresses().stream().filter(x -> x.getId() == visitTracker.getOwnerAddressId()).collect(Collectors.toList()).get(0).getAddressName();
-            VisitTrackerDTO resultDTO = VisitTrackerDTO.builder().fullName(byUserNameVisitor.getFirstName() + " " + byUserNameVisitor.getLastName())
-                    .actualExitDateTime(visitTracker.getActualExitDateTime())
-                    .actualVisitDateTime(visitTracker.getActualVisitDateTime())
-                    .approvalOrRejectionTime(visitTracker.getApprovalOrRejectionTime())
-                    .AuthCode(visitTracker.getAuthCode())
-                    .ownerApproval(visitTracker.getOwnerApproval())
-                    .visitType(visitTracker.getVisitType())
-                    .extraManualComments(visitTracker.getExtraManualComments())
-                    .rejectionReason(visitTracker.getRejectionReason())
-                    .NumberOfVisitors(visitTracker.getNumberOfVisitors())
-                    .ownerUsername(visitTracker.getOwnerUsername())
-                    .AddressName(addressName)
-                    .dateTimeOfVisitSchedule(visitTracker.getDateTimeOfVisitSchedule())
-                    .visitDateTime(visitTracker.getVisitDateTime())
-                    .exitDateTime(visitTracker.getExitDateTime())
-                    .version(visitTracker.getVersion())
-                    .isVehiclePresent(visitTracker.getIsVehiclePresent())
-                    .visitorVehicleName(visitTracker.getVisitorVehicleName())
-                    .visitorUsername(visitTracker.getVisitorUsername())
-                    .ownerAddressId(visitTracker.getOwnerAddressId()).build();
+//            VisitTrackerDTO resultDTO = VisitTrackerDTO.builder().fullName(byUserNameVisitor.getFirstName() + " " + byUserNameVisitor.getLastName())
+//                    .actualExitDateTime(visitTracker.getActualExitDateTime())
+//                    .actualVisitDateTime(visitTracker.getActualVisitDateTime())
+//                    .approvalOrRejectionTime(visitTracker.getApprovalOrRejectionTime())
+//                    .AuthCode(visitTracker.getAuthCode())
+//                    .ownerApproval(visitTracker.getOwnerApproval())
+//                    .visitType(visitTracker.getVisitType())
+//                    .extraManualComments(visitTracker.getExtraManualComments())
+//                    .rejectionReason(visitTracker.getRejectionReason())
+//                    .NumberOfVisitors(visitTracker.getNumberOfVisitors())
+//                    .ownerUsername(visitTracker.getOwnerUsername())
+//                    .AddressName(addressName)
+//                    .dateTimeOfVisitSchedule(visitTracker.getDateTimeOfVisitSchedule())
+//                    .visitDateTime(visitTracker.getVisitDateTime())
+//                    .exitDateTime(visitTracker.getExitDateTime())
+//                    .version(visitTracker.getVersion())
+//                    .isVehiclePresent(visitTracker.getIsVehiclePresent())
+//                    .visitorVehicleName(visitTracker.getVisitorVehicleName())
+//                    .visitorUsername(visitTracker.getVisitorUsername())
+//                    .ownerAddressId(visitTracker.getOwnerAddressId()).build();
+            VisitTrackerDTO resultDTO = VisitTrackerDTO.fromVisitorTrackerToVisitorTrackerDTO(visitTracker);
+            resultDTO.setFullName(byUserNameVisitor.getFirstName() + " " + byUserNameVisitor.getLastName());
+            resultDTO.setAddressName(addressName);
 
             listResultDTO.add(resultDTO);
         }
@@ -236,33 +239,36 @@ public class NewVisitService {
     }
 
     public List<VisitTrackerDTO> approvedRequestsWhichArePending(String ownerUsername) {
-        List<VisitTracker> byOwnerUsernameAndOwnerApprovalIsTrue = userVisitTrackerRepo.findByOwnerUsernameAndOwnerApprovalIsTrue(ownerUsername);
+        List<VisitTracker> byOwnerUsernameAndOwnerApprovalIsTrue = userVisitTrackerRepo.findByOwnerUsernameAndOwnerApprovalIsTrueAndRejectionTimeIsNotNull(ownerUsername);
         List<VisitTrackerDTO> listResultDTO = new ArrayList<>();
 
         for (VisitTracker visitTracker : byOwnerUsernameAndOwnerApprovalIsTrue) {
             UserProfile byUserNameVisitor = userProfileRepo.findByUserName(visitTracker.getVisitorUsername());
             UserProfile byUserNameOwner = userProfileRepo.findByUserName(visitTracker.getOwnerUsername());
             String addressName = byUserNameOwner.getUserAddresses().stream().filter(x -> x.getId() == visitTracker.getOwnerAddressId()).collect(Collectors.toList()).get(0).getAddressName();
-            VisitTrackerDTO resultDTO = VisitTrackerDTO.builder().fullName(byUserNameVisitor.getFirstName() + " " + byUserNameVisitor.getLastName())
-                    .actualExitDateTime(visitTracker.getActualExitDateTime())
-                    .actualVisitDateTime(visitTracker.getActualVisitDateTime())
-                    .approvalOrRejectionTime(visitTracker.getApprovalOrRejectionTime())
-                    .AuthCode(visitTracker.getAuthCode())
-                    .ownerApproval(visitTracker.getOwnerApproval())
-                    .visitType(visitTracker.getVisitType())
-                    .extraManualComments(visitTracker.getExtraManualComments())
-                    .rejectionReason(visitTracker.getRejectionReason())
-                    .NumberOfVisitors(visitTracker.getNumberOfVisitors())
-                    .ownerUsername(visitTracker.getOwnerUsername())
-                    .AddressName(addressName)
-                    .dateTimeOfVisitSchedule(visitTracker.getDateTimeOfVisitSchedule())
-                    .visitDateTime(visitTracker.getVisitDateTime())
-                    .exitDateTime(visitTracker.getExitDateTime())
-                    .version(visitTracker.getVersion())
-                    .isVehiclePresent(visitTracker.getIsVehiclePresent())
-                    .visitorVehicleName(visitTracker.getVisitorVehicleName())
-                    .visitorUsername(visitTracker.getVisitorUsername())
-                    .ownerAddressId(visitTracker.getOwnerAddressId()).build();
+//            VisitTrackerDTO resultDTO = VisitTrackerDTO.builder().fullName(byUserNameVisitor.getFirstName() + " " + byUserNameVisitor.getLastName())
+//                    .actualExitDateTime(visitTracker.getActualExitDateTime())
+//                    .actualVisitDateTime(visitTracker.getActualVisitDateTime())
+//                    .approvalOrRejectionTime(visitTracker.getApprovalOrRejectionTime())
+//                    .AuthCode(visitTracker.getAuthCode())
+//                    .ownerApproval(visitTracker.getOwnerApproval())
+//                    .visitType(visitTracker.getVisitType())
+//                    .extraManualComments(visitTracker.getExtraManualComments())
+//                    .rejectionReason(visitTracker.getRejectionReason())
+//                    .NumberOfVisitors(visitTracker.getNumberOfVisitors())
+//                    .ownerUsername(visitTracker.getOwnerUsername())
+//                    .AddressName(addressName)
+//                    .dateTimeOfVisitSchedule(visitTracker.getDateTimeOfVisitSchedule())
+//                    .visitDateTime(visitTracker.getVisitDateTime())
+//                    .exitDateTime(visitTracker.getExitDateTime())
+//                    .version(visitTracker.getVersion())
+//                    .isVehiclePresent(visitTracker.getIsVehiclePresent())
+//                    .visitorVehicleName(visitTracker.getVisitorVehicleName())
+//                    .visitorUsername(visitTracker.getVisitorUsername())
+//                    .ownerAddressId(visitTracker.getOwnerAddressId()).build();
+            VisitTrackerDTO resultDTO = VisitTrackerDTO.fromVisitorTrackerToVisitorTrackerDTO(visitTracker);
+            resultDTO.setFullName(byUserNameVisitor.getFirstName() + " " + byUserNameVisitor.getLastName());
+            resultDTO.setAddressName(addressName);
 
             listResultDTO.add(resultDTO);
         }
@@ -309,5 +315,11 @@ public class NewVisitService {
             return "Processed";
         }
         return "Not Processed";
+    }
+
+    public List<VisitTrackerDTO> getMyRequestedVisits(String username) {
+        List<VisitTracker> byVisitorUsername = userVisitTrackerRepo.findByVisitorUsername(username);
+        List<VisitTrackerDTO> visitTrackerDTOS = byVisitorUsername.stream().map(VisitTrackerDTO::fromVisitorTrackerToVisitorTrackerDTO).sorted(Comparator.comparing(VisitTrackerDTO::getDateTimeOfVisitSchedule)).toList();
+        return  visitTrackerDTOS;
     }
 }

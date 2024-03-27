@@ -1,5 +1,6 @@
 package com.visitorproject.dtos;
 
+import com.visitorproject.entity.VisitTracker;
 import com.visitorproject.entity.VisitType;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -55,4 +56,30 @@ public class VisitTrackerDTO {
     private String rejectionReason;
 
     private String extraManualComments;
+
+    public static VisitTrackerDTO fromVisitorTrackerToVisitorTrackerDTO(VisitTracker visitTracker){
+
+        VisitTrackerDTO resultDTO = VisitTrackerDTO.builder()
+                .actualExitDateTime(visitTracker.getActualExitDateTime())
+                .actualVisitDateTime(visitTracker.getActualVisitDateTime())
+                .approvalOrRejectionTime(visitTracker.getApprovalOrRejectionTime())
+                .AuthCode(visitTracker.getAuthCode())
+                .ownerApproval(visitTracker.getOwnerApproval())
+                .visitType(visitTracker.getVisitType())
+                .extraManualComments(visitTracker.getExtraManualComments())
+                .rejectionReason(visitTracker.getRejectionReason())
+                .NumberOfVisitors(visitTracker.getNumberOfVisitors())
+                .ownerUsername(visitTracker.getOwnerUsername())
+//                .AddressName(addressName)
+                .dateTimeOfVisitSchedule(visitTracker.getDateTimeOfVisitSchedule())
+                .visitDateTime(visitTracker.getVisitDateTime())
+                .exitDateTime(visitTracker.getExitDateTime())
+                .version(visitTracker.getVersion())
+                .isVehiclePresent(visitTracker.getIsVehiclePresent())
+                .visitorVehicleName(visitTracker.getVisitorVehicleName())
+                .visitorUsername(visitTracker.getVisitorUsername())
+                .ownerAddressId(visitTracker.getOwnerAddressId()).build();
+        return resultDTO;
+    }
+
 }

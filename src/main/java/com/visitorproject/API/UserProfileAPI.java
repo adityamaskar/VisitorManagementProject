@@ -197,6 +197,14 @@ public class UserProfileAPI {
         return newVisitService.handleRejectionRequest(visitTrackerDTO);
     }
 
+    @GetMapping("/get-my-requsted-visits")
+    public List<VisitTrackerDTO> getMyRequestedVisits(@RequestHeader("Authorization") String authorizationHeader){
+        String token = extractJwtToken(authorizationHeader);
+        String username = getUsername(token);
+        List <VisitTrackerDTO> visitTrackerDTOS =  newVisitService.getMyRequestedVisits(username);
+        return  visitTrackerDTOS;
+    }
+
 
 
 //    @GetMapping("/test-micro")
