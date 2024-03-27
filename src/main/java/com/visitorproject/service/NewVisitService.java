@@ -207,26 +207,7 @@ public class NewVisitService {
             UserProfile byUserNameVisitor = userProfileRepo.findByUserName(visitTracker.getVisitorUsername());
             UserProfile byUserNameOwner = userProfileRepo.findByUserName(visitTracker.getOwnerUsername());
             String addressName = byUserNameOwner.getUserAddresses().stream().filter(x -> x.getId() == visitTracker.getOwnerAddressId()).collect(Collectors.toList()).get(0).getAddressName();
-//            VisitTrackerDTO resultDTO = VisitTrackerDTO.builder().fullName(byUserNameVisitor.getFirstName() + " " + byUserNameVisitor.getLastName())
-//                    .actualExitDateTime(visitTracker.getActualExitDateTime())
-//                    .actualVisitDateTime(visitTracker.getActualVisitDateTime())
-//                    .approvalOrRejectionTime(visitTracker.getApprovalOrRejectionTime())
-//                    .AuthCode(visitTracker.getAuthCode())
-//                    .ownerApproval(visitTracker.getOwnerApproval())
-//                    .visitType(visitTracker.getVisitType())
-//                    .extraManualComments(visitTracker.getExtraManualComments())
-//                    .rejectionReason(visitTracker.getRejectionReason())
-//                    .NumberOfVisitors(visitTracker.getNumberOfVisitors())
-//                    .ownerUsername(visitTracker.getOwnerUsername())
-//                    .AddressName(addressName)
-//                    .dateTimeOfVisitSchedule(visitTracker.getDateTimeOfVisitSchedule())
-//                    .visitDateTime(visitTracker.getVisitDateTime())
-//                    .exitDateTime(visitTracker.getExitDateTime())
-//                    .version(visitTracker.getVersion())
-//                    .isVehiclePresent(visitTracker.getIsVehiclePresent())
-//                    .visitorVehicleName(visitTracker.getVisitorVehicleName())
-//                    .visitorUsername(visitTracker.getVisitorUsername())
-//                    .ownerAddressId(visitTracker.getOwnerAddressId()).build();
+
             VisitTrackerDTO resultDTO = VisitTrackerDTO.fromVisitorTrackerToVisitorTrackerDTO(visitTracker);
             resultDTO.setFullName(byUserNameVisitor.getFirstName() + " " + byUserNameVisitor.getLastName());
             resultDTO.setAddressName(addressName);
@@ -246,26 +227,7 @@ public class NewVisitService {
             UserProfile byUserNameVisitor = userProfileRepo.findByUserName(visitTracker.getVisitorUsername());
             UserProfile byUserNameOwner = userProfileRepo.findByUserName(visitTracker.getOwnerUsername());
             String addressName = byUserNameOwner.getUserAddresses().stream().filter(x -> x.getId() == visitTracker.getOwnerAddressId()).collect(Collectors.toList()).get(0).getAddressName();
-//            VisitTrackerDTO resultDTO = VisitTrackerDTO.builder().fullName(byUserNameVisitor.getFirstName() + " " + byUserNameVisitor.getLastName())
-//                    .actualExitDateTime(visitTracker.getActualExitDateTime())
-//                    .actualVisitDateTime(visitTracker.getActualVisitDateTime())
-//                    .approvalOrRejectionTime(visitTracker.getApprovalOrRejectionTime())
-//                    .AuthCode(visitTracker.getAuthCode())
-//                    .ownerApproval(visitTracker.getOwnerApproval())
-//                    .visitType(visitTracker.getVisitType())
-//                    .extraManualComments(visitTracker.getExtraManualComments())
-//                    .rejectionReason(visitTracker.getRejectionReason())
-//                    .NumberOfVisitors(visitTracker.getNumberOfVisitors())
-//                    .ownerUsername(visitTracker.getOwnerUsername())
-//                    .AddressName(addressName)
-//                    .dateTimeOfVisitSchedule(visitTracker.getDateTimeOfVisitSchedule())
-//                    .visitDateTime(visitTracker.getVisitDateTime())
-//                    .exitDateTime(visitTracker.getExitDateTime())
-//                    .version(visitTracker.getVersion())
-//                    .isVehiclePresent(visitTracker.getIsVehiclePresent())
-//                    .visitorVehicleName(visitTracker.getVisitorVehicleName())
-//                    .visitorUsername(visitTracker.getVisitorUsername())
-//                    .ownerAddressId(visitTracker.getOwnerAddressId()).build();
+
             VisitTrackerDTO resultDTO = VisitTrackerDTO.fromVisitorTrackerToVisitorTrackerDTO(visitTracker);
             resultDTO.setFullName(byUserNameVisitor.getFirstName() + " " + byUserNameVisitor.getLastName());
             resultDTO.setAddressName(addressName);
