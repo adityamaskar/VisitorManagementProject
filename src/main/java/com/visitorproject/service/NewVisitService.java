@@ -281,7 +281,13 @@ public class NewVisitService {
 
     public List<VisitTrackerDTO> getMyRequestedVisits(String username) {
         List<VisitTracker> byVisitorUsername = userVisitTrackerRepo.findByVisitorUsername(username);
-        List<VisitTrackerDTO> visitTrackerDTOS = byVisitorUsername.stream().map(VisitTrackerDTO::fromVisitorTrackerToVisitorTrackerDTO).sorted(Comparator.comparing(VisitTrackerDTO::getDateTimeOfVisitSchedule)).toList();
-        return  visitTrackerDTOS;
+
+        return byVisitorUsername.stream().map(VisitTrackerDTO::fromVisitorTrackerToVisitorTrackerDTO)
+                .peek(x -> {
+                    String s = userProfileRepo.findByUserName(x.getOwnerUsername()).getFirstName() + " " +
+                            userProfileRepo.findByUserName(x.getOwnerUsername()).getLastName();
+                    x.setFullName(s);
+                })
+                .sorted(Comparator.comparing(VisitTrackerDTO::getDateTimeOfVisitSchedule)).toList();
     }
 }
