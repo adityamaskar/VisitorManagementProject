@@ -31,7 +31,7 @@ import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/user")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*") // if using gateway then keep commented otherwise uncomment.
 //@CrossOrigin(origins = "http://localhost:5173")
 public class UserProfileAPI {
 
