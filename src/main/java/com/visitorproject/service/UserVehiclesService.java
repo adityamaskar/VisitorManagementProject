@@ -1,8 +1,6 @@
 package com.visitorproject.service;
 
-import com.visitorproject.dtos.UserAddressesDTO;
 import com.visitorproject.dtos.VehiclesDTO;
-import com.visitorproject.entity.UserAddresses;
 import com.visitorproject.entity.UserProfile;
 import com.visitorproject.entity.Vehicles;
 import com.visitorproject.repo.UserProfileRepo;
@@ -27,11 +25,8 @@ public class UserVehiclesService {
         if (!isVehicleNameAvailable) {
             String vehicleName = vehiclesDTO.getVehicleName();
             List<Vehicles> vehiclesFromDB = byUserName.getVehiclesList();
-//            UserAddresses userVehicles = UserAddressesDTO.userAddressDTOtoUserAddress(userAddressesDTO);
             Vehicles vehicles = VehiclesDTO.vehicleDTOtoVehicle(vehiclesDTO);
             vehiclesFromDB.add(vehicles);
-//            userAddressesFromDB.add(userAddresses);
-//            byUserName.setUserAddresses(userAddressesFromDB);
             byUserName.setVehiclesList(vehiclesFromDB);
             userProfileRepo.save(byUserName);
             return vehicleName;

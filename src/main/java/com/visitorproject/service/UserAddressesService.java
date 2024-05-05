@@ -14,9 +14,6 @@ import java.util.List;
 public class UserAddressesService {
 
     @Autowired
-    private UserAdressesRepo userAdressesRepo;
-
-    @Autowired
     private UserProfileRepo userProfileRepo;
 
 

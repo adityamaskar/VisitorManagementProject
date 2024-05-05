@@ -7,10 +7,7 @@ import com.visitorproject.dtos.VehiclesDTO;
 import com.visitorproject.entity.UserAddresses;
 import com.visitorproject.entity.UserProfile;
 import com.visitorproject.entity.Vehicles;
-import com.visitorproject.repo.UserAdressesRepo;
 import com.visitorproject.repo.UserProfileRepo;
-import com.visitorproject.repo.UserVehicleRepo;
-import com.visitorproject.repo.UserVisitTrackerRepo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +20,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Timer;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,15 +27,6 @@ public class UserProfileService implements UserDetailsService {
 
     @Autowired
     private UserProfileRepo userProfileRepo;
-
-    @Autowired
-    private UserAdressesRepo userAdressesRepo;
-
-    @Autowired
-    private UserVehicleRepo userVehicleRepo;
-
-    @Autowired
-    private UserVisitTrackerRepo userVisitTrackerRepo;
 
     @Autowired
     private KafkaTemplate<String, AuthCompleteEvent> kafkaTemplate;
@@ -52,13 +39,6 @@ public class UserProfileService implements UserDetailsService {
 
     public List<String> getAllProfiles() {
         List<UserProfile> listOfUsers = userProfileRepo.findAll();
-//        List<String> userList = new ArrayList<>();
-
-//        for (UserProfile userProfile : listOfUsers) {
-//            userList.add(userProfile.getUserName());
-//        }
-
-//       with Stream API
         List<String> list = listOfUsers.stream().map(o -> o.getUserName()).toList();
         return list;
     }
@@ -75,11 +55,10 @@ public class UserProfileService implements UserDetailsService {
     }
 
     public List<UserProfile> getAllProfilesWithPass() {
-        List<UserProfile> listOfUsers = userProfileRepo.findAll();
-        return listOfUsers;
+        return userProfileRepo.findAll();
     }
 
-    public UserProfile getUserbyId(Long userId) {
+    public UserProfile getUserById(Long userId) {
         Optional<UserProfile> byId = userProfileRepo.findById(userId);
         if (byId.isPresent()) {
             return byId.get();
@@ -97,16 +76,14 @@ public class UserProfileService implements UserDetailsService {
         }
     }
 
-
     public Long createUser(UserProfileDto userProfileDto) {
         verifyUserProfile(userProfileDto);
-        //creating the Address Entity
         List<UserAddressesDTO> userAddressesDTO = userProfileDto.getUserAddressesDTO();
         List<UserAddresses> userAddressesList = null;
         if (userAddressesDTO != null) {
             userAddressesList = userAddressesDTO.stream().map(x -> UserAddressesDTO.userAddressDTOtoUserAddress(x)).collect(Collectors.toList());
         } else {
-            logger.warn("Address is Empty");
+            logger.warn("Address object is Empty");
         }
 
         //Creating the Vehicles Entity
@@ -115,7 +92,7 @@ public class UserProfileService implements UserDetailsService {
         if (vehiclesDTOS != null) {
             vehiclesList = vehiclesDTOS.stream().map(x -> VehiclesDTO.vehicleDTOtoVehicle(x)).collect(Collectors.toList());
         } else {
-            logger.warn("Vehicle is Empty");
+            logger.warn("Vehicle object is Empty");
         }
 
         UserProfile newUser = UserProfile.builder()
@@ -139,8 +116,8 @@ public class UserProfileService implements UserDetailsService {
         if (byUserName != null) {
             throw new RuntimeException("UserName already exists");
         }
-        UserProfile byemail = userProfileRepo.findByemail(userProfileDto.getEmail());
-        if (byemail != null) {
+        UserProfile byEmail = userProfileRepo.findByemail(userProfileDto.getEmail());
+        if (byEmail != null) {
             throw new RuntimeException("Email already exists");
         }
         UserProfile byPhoneNum = userProfileRepo.findByPhoneNum(userProfileDto.getPhoneNum());
@@ -153,11 +130,10 @@ public class UserProfileService implements UserDetailsService {
     }
 
     public void sendNotificationOnAuth(String userName){
+        //todo correct in the code level
         UserProfile userByUserName = getUserByUserName(userName);
         kafkaTemplate.send(kafkaTemplate.getDefaultTopic(),
                 new AuthCompleteEvent(userName, userByUserName.getFirstName() + " " + userByUserName.getLastName()));
     }
-
-
 }
 

@@ -3,16 +3,11 @@ package com.visitorproject.API;
 import com.visitorproject.dtos.*;
 import com.visitorproject.entity.AuthRequest;
 import com.visitorproject.entity.UserProfile;
-import com.visitorproject.entity.VisitTracker;
 import com.visitorproject.filter.JwtService;
-import com.visitorproject.service.NewVisitService;
 import com.visitorproject.service.UserAddressesService;
 import com.visitorproject.service.UserProfileService;
 import com.visitorproject.service.UserVehiclesService;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 
-import io.github.resilience4j.retry.annotation.Retry;
-import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +22,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+
 
 @RestController
 @RequestMapping("/user")
@@ -51,28 +46,23 @@ public class UserProfileAPI {
     private AuthenticationManager authenticationManager;
 
     @Autowired
-    private NewVisitService newVisitService;
-
-    @Autowired
     private JwtService jwtHelper;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @GetMapping("/all-usernames")
     public List<String> getAllUsers() {
-        List<String> allProfiles = userProfileService.getAllProfiles();
-        return allProfiles;
+        return userProfileService.getAllProfiles();
     }
 
     @GetMapping("/all-username-password")
     public List<UserProfile> getAllUsersAndPass() {
-        List<UserProfile> allProfiles = userProfileService.getAllProfilesWithPass();
-        return allProfiles;
+        return userProfileService.getAllProfilesWithPass();
     }
 
     @GetMapping("/{userId}")
     public UserProfile getUser(@PathVariable Long userId) {
-        return userProfileService.getUserbyId(userId);
+        return userProfileService.getUserById(userId);
     }
 
     @GetMapping("username/{username}")
@@ -99,8 +89,7 @@ public class UserProfileAPI {
     public String SetNewVehicle(@RequestHeader("Authorization") String authorizationHeader, @RequestBody VehiclesDTO vehiclesDTO) {
         String token = extractJwtToken(authorizationHeader);
         String username = getUsername(token);
-        String result = userVehiclesService.setNewVehicle(vehiclesDTO, username);
-        return result;
+        return userVehiclesService.setNewVehicle(vehiclesDTO, username);
     }
 
     @GetMapping("/test/{token}")
@@ -108,8 +97,7 @@ public class UserProfileAPI {
         return jwtHelper.extractUsername(token);
     }
 
-
-    private String extractJwtToken(String authorizationHeader) {
+    public String extractJwtToken(String authorizationHeader) {
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             return authorizationHeader.substring(7); // Extract the token excluding "Bearer "
         }
@@ -146,66 +134,12 @@ public class UserProfileAPI {
         }
     }
 
-
     public String fallbackAuth(AuthRequest authRequest, RuntimeException runtimeException){
         if(runtimeException.getMessage().equalsIgnoreCase("Username or Password is wrong")){
             return "Username or Password is wrong";
         }
         return "Oops some Error occurred try after some time";
     }
-
-    @GetMapping("/search-home")
-    public SearchUserInfoDTO searchHome(@RequestHeader("Authorization") String authorizationHeader, @RequestParam String firstName, @RequestParam String phoneNum, @RequestParam String societyName, @RequestParam(required = false) String addressName) throws RuntimeException{
-        String token = extractJwtToken(authorizationHeader);
-        String currentUsername = getUsername(token);
-        SearchUserInfoDTO searchedSociety = newVisitService.searchSociety(firstName, phoneNum, societyName, addressName, currentUsername);
-        return searchedSociety;
-    }
-
-    @PostMapping("/set-visit")
-    public void setVisit(@RequestParam String visitorUsername, @RequestParam String ownerUsername, @RequestBody VisitTrackerDTO visitTrackerDTO) {
-//        String token = extractJwtToken(authorizationHeader);
-//        String username = getUsername(token);
-        newVisitService.setVisit(visitorUsername, ownerUsername, visitTrackerDTO);
-    }
-
-    @GetMapping("/received-approval-requests")
-    public List<VisitTrackerDTO> receivedApprovalRequest(@RequestHeader("Authorization") String authorizationHeader) {
-        String token = extractJwtToken(authorizationHeader);
-        String username = getUsername(token);
-        List<VisitTrackerDTO> pendingrequestsForApproval = newVisitService.getPendingrequestsForApproval(username);
-        return pendingrequestsForApproval;
-    }
-
-    @GetMapping("/approved-requests-pending-visit")
-    public List<VisitTrackerDTO> approvedRequestsWhichArePending(@RequestHeader("Authorization") String authorizationHeader) {
-        String token = extractJwtToken(authorizationHeader);
-        String username = getUsername(token);
-        List<VisitTrackerDTO> approvedRequestsWhichArePending = newVisitService.approvedRequestsWhichArePending(username);
-        return approvedRequestsWhichArePending;
-    }
-
-    @PostMapping("/handle-approval-request")
-    public String handleApprovalRequest( @RequestBody VisitTrackerDTO visitTrackerDTO){
-        System.out.println(visitTrackerDTO);
-        return newVisitService.handleApprovalRequest(visitTrackerDTO);
-    }
-
-    @PostMapping("/handle-rejection-request")
-    public String handleRejectionRequest( @RequestBody VisitTrackerDTO visitTrackerDTO){
-        System.out.println(visitTrackerDTO);
-        return newVisitService.handleRejectionRequest(visitTrackerDTO);
-    }
-
-    @GetMapping("/get-my-requsted-visits")
-    public List<VisitTrackerDTO> getMyRequestedVisits(@RequestHeader("Authorization") String authorizationHeader){
-        String token = extractJwtToken(authorizationHeader);
-        String username = getUsername(token);
-        List <VisitTrackerDTO> visitTrackerDTOS =  newVisitService.getMyRequestedVisits(username);
-        return  visitTrackerDTOS;
-    }
-
-
 
 //    @GetMapping("/test-micro")
 //    @CircuitBreaker(name = "test1", fallbackMethod = "fallbackMethod1")

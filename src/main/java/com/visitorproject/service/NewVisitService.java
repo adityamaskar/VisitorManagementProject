@@ -7,9 +7,7 @@ import com.visitorproject.entity.UserAddresses;
 import com.visitorproject.entity.UserProfile;
 import com.visitorproject.entity.VisitTracker;
 import com.visitorproject.entity.VisitType;
-import com.visitorproject.repo.UserAdressesRepo;
 import com.visitorproject.repo.UserProfileRepo;
-import com.visitorproject.repo.UserVehicleRepo;
 import com.visitorproject.repo.UserVisitTrackerRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,13 +20,7 @@ import java.util.stream.Collectors;
 public class NewVisitService {
 
     @Autowired
-    private UserAdressesRepo userAdressesRepo;
-
-    @Autowired
     private UserProfileRepo userProfileRepo;
-
-    @Autowired
-    private UserVehicleRepo userVehicleRepo;
 
     @Autowired
     private UserVisitTrackerRepo userVisitTrackerRepo;
@@ -37,7 +29,6 @@ public class NewVisitService {
     public SearchUserInfoDTO searchSociety(String firstName, String phoneNum, String societyName, String addressName, String currentUsername) {
         UserProfile byPhoneNum = userProfileRepo.findByPhoneNum(phoneNum);
 
-//        Map<String, String> userInformation = new HashMap<>();
         SearchUserInfoDTO searchUserInfoDTO = new SearchUserInfoDTO();
         if (byPhoneNum == null) {
             throw new RuntimeException("This Phone Number : '" + phoneNum + "' not assigned with the User");
@@ -46,7 +37,6 @@ public class NewVisitService {
             throw new RuntimeException("You are trying to enter your own details : Phone Number ");
         }
         List<UserAddresses> userAddresses = byPhoneNum.getUserAddresses();
-//        String selectedSociety = null;
 
         if (byPhoneNum.getFirstName().equalsIgnoreCase(firstName.toLowerCase().trim())) {
             List<UserAddresses> userWithSameSociety = userAddresses.stream().filter(x -> x.getSocietyName().equalsIgnoreCase(societyName)).collect(Collectors.toList());
@@ -90,37 +80,6 @@ public class NewVisitService {
         } else {
             throw new RuntimeException("FirstName : '" + firstName + "' is not registered with given user");
         }
-//        String message = "";
-//        List<String> societyList = new ArrayList<>();
-//        List<UserAddresses> userAddresseslist = new ArrayList<>();
-//        UserAddresses selectedUserAddress = null;
-//        for (UserAddresses userAddresses : byPhoneNum.getUserAddresses()) {
-//            societyList.add(userAddresses.getSocietyName());
-//            userAddresseslist.add(userAddresses);
-//            if (addressName == null) {
-//                if (userAddresses.getSocietyName().equalsIgnoreCase(societyName)) {
-//                    selectedUserAddress = userAddresses;
-//                }
-//            }
-//            {
-//                if (userAddresses.getSocietyName().equalsIgnoreCase(societyName) && userAddresses.getAddressName().equalsIgnoreCase(addressName)) {
-//                    selectedUserAddress = userAddresses;
-//                }
-//            }
-//        }
-
-//        if (selectedUserAddress == null) {
-//            userInformation.put("message", "Society Name is incorrect please check from the list or contact the person");
-//            userInformation.put("societyAvailable", societyList.toString());
-//            userInformation.put("societyAvailableWithInfo", userAddresseslist.toString());
-////            userInformation.put("Id", so)
-//        } else if (societyList.isEmpty()) {
-//            userInformation.put("societyAvailable", "No Societies Found");
-//        } else {
-//            userInformation.put("SocietyName", societyName);
-//            userInformation.put("societyAvailableWithInfo", selectedUserAddress.toString());
-//            userInformation.put("Username", byPhoneNum.getUserName());
-//        }
 
         return searchUserInfoDTO;
     }
@@ -133,7 +92,7 @@ public class NewVisitService {
         UserAddresses userAddresses;
         try {
             userAddresses = ownerProfile.getUserAddresses().stream().filter(x -> x.getAddressName().equalsIgnoreCase(visitTrackerDTO.getAddressName())).collect(Collectors.toList()).get(0);
-            if (visitTrackerDTO.getIsVehiclePresent() == true) {
+            if (visitTrackerDTO.getIsVehiclePresent()) {
                 visitorProfile.getVehiclesList().stream().filter(x -> x.getVehicleName().equalsIgnoreCase(visitTrackerDTO.getVisitorVehicleName())).collect(Collectors.toList()).get(0);
             }
         } catch (Exception ex) {
@@ -156,7 +115,6 @@ public class NewVisitService {
                     .build();
 
             VisitTracker save = userVisitTrackerRepo.save(visitTrackerObj);
-//            visitTrackerObj.setAuthCode(generateUniqueAuthNumber());
             visitTrackerObj.setOwnerApproval(false);
             userVisitTrackerRepo.save(visitTrackerObj);
         } catch (Exception ex) {
@@ -165,6 +123,7 @@ public class NewVisitService {
 
     }
 
+    //todo auth code part
     public static String generateUniqueAuthNumber() {
         UUID uuid = UUID.randomUUID();
         String uniqueNumber = "EN" + uuid.toString().replace("-", "").substring(0, 6);
@@ -172,33 +131,33 @@ public class NewVisitService {
     }
 
     private void validateIMPData(String visitorUsername, String ownerUsername, VisitTrackerDTO visitTrackerDTO) {
-        if (visitorUsername == ownerUsername) {
+        if (visitorUsername.equals(ownerUsername)) {
             throw new RuntimeException("Owner and Visitor can't be same");
         }
         if(visitTrackerDTO.getVisitType().equals(VisitType.None)){
             throw new RuntimeException("Select the Visit Type");
         }
         if (visitTrackerDTO.getVisitDateTime() == null || visitTrackerDTO.getExitDateTime() == null) {
-            throw new RuntimeException("Visit or exit time can't be null");
+            throw new RuntimeException("Visit or Exit time can't be null");
         }
         if (LocalDateTime.now().isAfter(visitTrackerDTO.getVisitDateTime())) {
-            throw new RuntimeException("Visit time can't be in past");
+            throw new RuntimeException("Visit Time can't be in past");
         }
         if (!visitTrackerDTO.getVisitDateTime().isBefore(visitTrackerDTO.getExitDateTime())) {
-            throw new RuntimeException("Exit time should be After the visit time");
+            throw new RuntimeException("Exit Time should be After the visit time");
         }
         if (visitTrackerDTO.getVisitType() == null) {
             throw new RuntimeException("Please specify Visit type");
         }
-        if (visitTrackerDTO.getIsVehiclePresent() == true && visitTrackerDTO.getVisitorVehicleName() == null) {
+        if (visitTrackerDTO.getIsVehiclePresent() && visitTrackerDTO.getVisitorVehicleName() == null) {
             throw new RuntimeException("Vehicle name is empty");
         }
-        if (visitTrackerDTO.getIsVehiclePresent() == false && visitTrackerDTO.getVisitorVehicleName() != null) {
+        if (!visitTrackerDTO.getIsVehiclePresent() && visitTrackerDTO.getVisitorVehicleName() != null) {
             throw new RuntimeException("You have selected vehicle as not present but provided vehicle name");
         }
     }
 
-    public List<VisitTrackerDTO> getPendingrequestsForApproval(String ownerUsername) {
+    public List<VisitTrackerDTO> getPendingRequestsForApproval(String ownerUsername) {
 
         List<VisitTracker> byOwnerUsernameAndOwnerApprovalIsFalse = userVisitTrackerRepo.findByOwnerUsernameAndOwnerApprovalIsFalseAndRejectionTimeIsNull(ownerUsername);
         List<VisitTrackerDTO> listResultDTO = new ArrayList<>();
@@ -214,8 +173,6 @@ public class NewVisitService {
 
             listResultDTO.add(resultDTO);
         }
-
-
         return listResultDTO;
     }
 
@@ -234,8 +191,6 @@ public class NewVisitService {
 
             listResultDTO.add(resultDTO);
         }
-
-
         return listResultDTO;
     }
 
