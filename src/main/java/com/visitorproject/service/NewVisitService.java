@@ -9,14 +9,18 @@ import com.visitorproject.entity.VisitTracker;
 import com.visitorproject.entity.VisitType;
 import com.visitorproject.repo.UserProfileRepo;
 import com.visitorproject.repo.UserVisitTrackerRepo;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class NewVisitService {
 
     @Autowired
@@ -24,6 +28,15 @@ public class NewVisitService {
 
     @Autowired
     private UserVisitTrackerRepo userVisitTrackerRepo;
+
+    @Autowired
+    RestTemplate restTemplate;
+
+    @Value("${notification-service-enabled}")
+    private boolean notificationServiceEnabled;
+
+    @Value("${kafka-notifications}")
+    private boolean kafkaNotification;
 
 
     public SearchUserInfoDTO searchSociety(String firstName, String phoneNum, String societyName, String addressName, String currentUsername) {
@@ -117,10 +130,18 @@ public class NewVisitService {
             VisitTracker save = userVisitTrackerRepo.save(visitTrackerObj);
             visitTrackerObj.setOwnerApproval(false);
             userVisitTrackerRepo.save(visitTrackerObj);
+            sendUpdateForTracker(visitTrackerObj);
         } catch (Exception ex) {
             throw new RuntimeException("Something Went wrong while saving object");
         }
 
+    }
+
+    public void sendUpdateForTracker(VisitTracker visitTracker){
+        if(notificationServiceEnabled) {
+            String s = restTemplate.postForObject("http://notification-service/notify/tracking", VisitTrackerDTO.fromVisitorTrackerToVisitorTrackerDTO(visitTracker), String.class);
+            log.info("API call to Notification service Successful, Response : " + s);
+        }
     }
 
     //todo auth code part
@@ -209,6 +230,7 @@ public class NewVisitService {
             visitTracker.setVersion(visitTracker.getVersion() +1 );
             visitTracker.setApprovalOrRejectionTime(LocalDateTime.now());
             userVisitTrackerRepo.save(visitTracker);
+            sendUpdateForTracker(visitTracker);
             return "Processed";
         }
         return "Not Processed";
@@ -229,6 +251,7 @@ public class NewVisitService {
             visitTracker.setVersion(visitTracker.getVersion() +1 );
             visitTracker.setApprovalOrRejectionTime(LocalDateTime.now());
             userVisitTrackerRepo.save(visitTracker);
+            sendUpdateForTracker(visitTracker);
             return "Processed";
         }
         return "Not Processed";
