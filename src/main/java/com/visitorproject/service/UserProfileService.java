@@ -45,13 +45,8 @@ public class UserProfileService implements UserDetailsService {
 
     public UserDetails loadUserByUsername(String userName) {
         UserProfile byUserName;
-        try {
             byUserName = userProfileRepo.findByUserName(userName);
             return new User(byUserName.getUserName(), byUserName.getPassword(), new ArrayList<>());
-        }catch (NullPointerException exception){
-            logger.error("Username or Password is wrong");
-            throw new RuntimeException("Username or Password is wrong");
-        }
     }
 
     public List<UserProfile> getAllProfilesWithPass() {

@@ -3,11 +3,16 @@ package com.visitorproject.API;
 import com.visitorproject.dtos.*;
 import com.visitorproject.entity.AuthRequest;
 import com.visitorproject.entity.UserProfile;
+import com.visitorproject.entity.VisitTracker;
 import com.visitorproject.filter.JwtService;
+import com.visitorproject.service.NewVisitService;
 import com.visitorproject.service.UserAddressesService;
 import com.visitorproject.service.UserProfileService;
 import com.visitorproject.service.UserVehiclesService;
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +27,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeoutException;
 
 
 @RestController
@@ -47,6 +54,9 @@ public class UserProfileAPI {
 
     @Autowired
     private JwtService jwtHelper;
+
+//    @Autowired
+//    private NewVisitService newVisitService;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -105,40 +115,59 @@ public class UserProfileAPI {
     }
 
     @PostMapping("/authenticate")
-//    @CircuitBreaker(name = "authentication" , fallbackMethod = "fallbackAuth")
-//    @TimeLimiter(name = "authentication")
+    @CircuitBreaker(name = "authentication" , fallbackMethod = "fallbackAuth")
+    @TimeLimiter(name = "authentication")
 //    @Retry(name = "authentication")
-    public ResponseEntity<String> generateToken(@RequestBody AuthRequest authRequest) throws Exception {
-        Authentication authentication = null;
-        try {
-            authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUserName(), authRequest.getPassword()));
-            if (authentication.isAuthenticated()) {
-                String token = jwtHelper.generateToken(authRequest.getUserName());
+    public CompletableFuture<ResponseEntity<String>> generateToken(@RequestBody AuthRequest authRequest) throws Exception {
+        return CompletableFuture.supplyAsync(() -> {
+            Authentication authentication = null;
+            try {
+                Thread.sleep(10000);
+//            newVisitService.sendUpdateForTracker(new VisitTracker());
+                try {
+                    authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUserName(), authRequest.getPassword()));
+                }catch (NullPointerException exception){
+                    logger.error("Username or Password is wrong");
+                    throw new RuntimeException("Username or Password is wrong");
+                }
+                if (authentication.isAuthenticated()) {
+                    String token = jwtHelper.generateToken(authRequest.getUserName());
 //                userProfileService.sendNotificationOnAuth(authRequest.getUserName());
-                logger.info("User  " + '"' + authRequest.getUserName() + '"' + " is authenticated");
-                return new ResponseEntity<>(token, HttpStatus.ACCEPTED);
-            } else {
-                throw new UsernameNotFoundException("Invalid user request !");
-            }
-        }catch (InternalAuthenticationServiceException exception){
-            logger.error(exception.getMessage() + " : " + exception);
-            throw new IllegalArgumentException("Username or Password is wrong");
-        }
-        catch (Exception exception){
-            logger.error(exception.getMessage() + " : " + exception);
-            if(exception.getMessage().equalsIgnoreCase("Bad credentials")){
+                    logger.info("User  " + '"' + authRequest.getUserName() + '"' + " is authenticated");
+                    return new ResponseEntity<>(token, HttpStatus.ACCEPTED);
+                } else {
+                    throw new UsernameNotFoundException("Invalid user request !");
+                }
+            }catch (InternalAuthenticationServiceException exception){
+                logger.error(exception.getMessage() + " : " + exception);
                 throw new IllegalArgumentException("Username or Password is wrong");
-            }else {
-                throw new RuntimeException("Some error occurred");
             }
-        }
+            catch (Exception exception){
+                logger.error(exception.getMessage() + " : " + exception);
+                if(exception.getMessage().equalsIgnoreCase("Bad credentials")){
+                    throw new IllegalArgumentException("Username or Password is wrong");
+                }else {
+                    throw new RuntimeException("Some error occurred");
+                }
+            }
+        });
     }
 
-    public String fallbackAuth(AuthRequest authRequest, RuntimeException runtimeException){
-        if(runtimeException.getMessage().equalsIgnoreCase("Username or Password is wrong")){
-            return "Username or Password is wrong";
-        }
-        return "Oops some Error occurred try after some time";
+    public CompletableFuture<ResponseEntity<String>> fallbackAuth(AuthRequest authRequest, Exception ex){
+        return CompletableFuture.supplyAsync(() -> {
+            if(ex instanceof TimeoutException)
+                return new ResponseEntity<>("Request Taking Longer than expected please try after some time", HttpStatus.INTERNAL_SERVER_ERROR);
+            else if (ex instanceof CallNotPermittedException) {
+                return new ResponseEntity<>("Too Many Requests, Please try after some time", HttpStatus.TOO_MANY_REQUESTS);
+            }
+            return new ResponseEntity<>(ex.getMessage(), HttpStatus.FORBIDDEN);
+        });
+//        if(ex.getMessage().equalsIgnoreCase("Username or Password is wrong")){
+//            return "Username or Password is wrong";
+//        }
+//        return "Oops some Error occurred try after some time";
+
+
     }
 
 //    @GetMapping("/test-micro")
