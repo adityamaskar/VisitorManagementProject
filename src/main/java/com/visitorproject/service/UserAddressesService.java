@@ -17,7 +17,7 @@ public class UserAddressesService {
     private UserProfileRepo userProfileRepo;
 
 
-    public String setNewAddress(UserAddressesDTO userAddressesDTO, String username) {
+    public synchronized String setNewAddress(UserAddressesDTO userAddressesDTO, String username) {
         UserProfile byUserName = userProfileRepo.findByUserName(username);
         boolean isUserAddressNameAvailable = byUserName.getUserAddresses().stream().map(x -> x.getAddressName()).anyMatch(x -> x.equalsIgnoreCase(userAddressesDTO.getAddressName()));
         if (!isUserAddressNameAvailable) {

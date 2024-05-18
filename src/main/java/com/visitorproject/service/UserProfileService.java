@@ -31,11 +31,7 @@ public class UserProfileService implements UserDetailsService {
     @Autowired
     private KafkaTemplate<String, AuthCompleteEvent> kafkaTemplate;
 
-    private final String regexForNumber = "^\\+\\d{7,}$";
-
-
     private static final Logger logger = LoggerFactory.getLogger(UserProfileService.class);
-
 
     public List<String> getAllProfiles() {
         List<UserProfile> listOfUsers = userProfileRepo.findAll();
@@ -71,7 +67,7 @@ public class UserProfileService implements UserDetailsService {
         }
     }
 
-    public Long createUser(UserProfileDto userProfileDto) {
+    public synchronized Long createUser(UserProfileDto userProfileDto) {
         verifyUserProfile(userProfileDto);
         List<UserAddressesDTO> userAddressesDTO = userProfileDto.getUserAddressesDTO();
         List<UserAddresses> userAddressesList = null;
@@ -119,8 +115,9 @@ public class UserProfileService implements UserDetailsService {
         if (byPhoneNum != null) {
             throw new RuntimeException("Phone Number already exists");
         }
+        String regexForNumber = "^\\+\\d{7,}$";
         if(!userProfileDto.getPhoneNum().matches(regexForNumber)){
-            throw new RuntimeException("Please provide correct Phone number");
+            throw new RuntimeException("Please provide correct Phone number with country code");
         }
     }
 

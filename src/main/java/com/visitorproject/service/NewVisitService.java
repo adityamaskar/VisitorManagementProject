@@ -3,10 +3,7 @@ package com.visitorproject.service;
 import com.visitorproject.dtos.SearchUserInfoDTO;
 import com.visitorproject.dtos.UserAddressesDTO;
 import com.visitorproject.dtos.VisitTrackerDTO;
-import com.visitorproject.entity.UserAddresses;
-import com.visitorproject.entity.UserProfile;
-import com.visitorproject.entity.VisitTracker;
-import com.visitorproject.entity.VisitType;
+import com.visitorproject.entity.*;
 import com.visitorproject.repo.UserProfileRepo;
 import com.visitorproject.repo.UserVisitTrackerRepo;
 import lombok.extern.slf4j.Slf4j;
@@ -32,11 +29,14 @@ public class NewVisitService {
     @Autowired
     RestTemplate restTemplate;
 
-    @Value("${notification-service-enabled}")
+    @Value("${notification-service-on-tracking}")
     private boolean notificationServiceEnabled;
 
-    @Value("${kafka-notifications}")
-    private boolean kafkaNotification;
+    @Value("${notification-service-endpoint}")
+    private String notificationServiceUrl;
+
+//    @Value("${kafka-notifications}")
+//    private boolean kafkaNotification;
 
 
     public SearchUserInfoDTO searchSociety(String firstName, String phoneNum, String societyName, String addressName, String currentUsername) {
@@ -52,42 +52,42 @@ public class NewVisitService {
         List<UserAddresses> userAddresses = byPhoneNum.getUserAddresses();
 
         if (byPhoneNum.getFirstName().equalsIgnoreCase(firstName.toLowerCase().trim())) {
-            List<UserAddresses> userWithSameSociety = userAddresses.stream().filter(x -> x.getSocietyName().equalsIgnoreCase(societyName)).collect(Collectors.toList());
+            List<UserAddresses> userWithSameSociety = userAddresses.stream().filter(x -> x.getSocietyName().equalsIgnoreCase(societyName)).toList();
             if (userWithSameSociety.isEmpty()) {
                 throw new RuntimeException("This Society Name : '" + societyName + "' is not correct");
             }
-            if (addressName != null || addressName == "undefined" && !addressName.equalsIgnoreCase("undefined")) {
-                List<UserAddresses> userWithSameAddressName = userAddresses.stream().filter(x -> x.getAddressName().equalsIgnoreCase(addressName)).collect(Collectors.toList());
+            if (addressName != null) {
+                List<UserAddresses> userWithSameAddressName = userAddresses.stream().filter(x -> x.getAddressName().equalsIgnoreCase(addressName)).toList();
                 if (!userWithSameAddressName.isEmpty()) {
-                    SearchUserInfoDTO userInfoDTO = searchUserInfoDTO.builder().message("Society Details as Below")
+                    SearchUserInfoDTO userInfoDTO = SearchUserInfoDTO.builder().message("Society Details as Below")
                             .result("found").lastName(byPhoneNum.getLastName())
                             .firstName(byPhoneNum.getFirstName())
                             .userName(byPhoneNum.getUserName())
-                            .societyAvailableWithInfo(userWithSameAddressName.stream().map(x -> UserAddressesDTO.userAddressesToUserAddressDTO(x)).collect(Collectors.toList()))
+                            .societyAvailableWithInfo(userWithSameAddressName.stream().map(x -> UserAddressesDTO.userAddressesToUserAddressDTO(x)).toList())
                             .build();
 
                     return userInfoDTO;
                 } else {
+                    SearchUserInfoDTO userInfoDTO;
                     if (userWithSameSociety.size() == 1) {
-                        SearchUserInfoDTO userInfoDTO = searchUserInfoDTO.builder().message("Found Above address if the required address not available please contact owner to add it")
+                        userInfoDTO = SearchUserInfoDTO.builder().message("Found Above address if the required address not available please contact owner to add it")
                                 .result("found").lastName(byPhoneNum.getLastName())
                                 .firstName(byPhoneNum.getFirstName())
                                 .userName(byPhoneNum.getUserName())
-                                .societyAvailableWithInfo(userWithSameSociety.stream().map(x -> UserAddressesDTO.userAddressesToUserAddressDTO(x)).collect(Collectors.toList()))
+                                .societyAvailableWithInfo(userWithSameSociety.stream().map(x -> UserAddressesDTO.userAddressesToUserAddressDTO(x)).toList())
                                 .build();
 
-                        return userInfoDTO;
                     } else {
-                        SearchUserInfoDTO userInfoDTO = searchUserInfoDTO.builder().message("Address Name is incorrect, Below are the available addresses with the Society Name, \" +\n" +
+                        userInfoDTO = SearchUserInfoDTO.builder().message("Address Name is incorrect, Below are the available addresses with the Society Name, \" +\n" +
                                         "                                \"If desired addresses not there connect owner to Add it")
                                 .result("multiple found").lastName(byPhoneNum.getLastName())
                                 .firstName(byPhoneNum.getFirstName())
                                 .userName(byPhoneNum.getUserName())
-                                .societyAvailableWithInfo(userWithSameSociety.stream().map(x -> UserAddressesDTO.userAddressesToUserAddressDTO(x)).collect(Collectors.toList()))
+                                .societyAvailableWithInfo(userWithSameSociety.stream().map(x -> UserAddressesDTO.userAddressesToUserAddressDTO(x)).toList())
                                 .build();
 
-                        return userInfoDTO;
                     }
+                    return userInfoDTO;
                 }
             }
         } else {
@@ -97,16 +97,24 @@ public class NewVisitService {
         return searchUserInfoDTO;
     }
 
-    public void setVisit(String visitorUsername, String ownerUsername, VisitTrackerDTO visitTrackerDTO) {
+    public synchronized void setVisit(String visitorUsername, String ownerUsername, VisitTrackerDTO visitTrackerDTO) {
         validateIMPData(visitorUsername, ownerUsername, visitTrackerDTO);
 
         UserProfile visitorProfile = userProfileRepo.findByUserName(visitorUsername);
         UserProfile ownerProfile = userProfileRepo.findByUserName(ownerUsername);
         UserAddresses userAddresses;
+        Vehicles vehicles = null;
         try {
-            userAddresses = ownerProfile.getUserAddresses().stream().filter(x -> x.getAddressName().equalsIgnoreCase(visitTrackerDTO.getAddressName())).collect(Collectors.toList()).get(0);
+            List<UserAddresses> list = ownerProfile.getUserAddresses().stream().filter(x -> x.getAddressName().equalsIgnoreCase(visitTrackerDTO.getAddressName())).toList();
+            if(!list.isEmpty()){
+                userAddresses = list.get(0);
+            }else 
+                throw new RuntimeException("Owner Address name invalid or issue in the data");
             if (visitTrackerDTO.getIsVehiclePresent()) {
-                visitorProfile.getVehiclesList().stream().filter(x -> x.getVehicleName().equalsIgnoreCase(visitTrackerDTO.getVisitorVehicleName())).collect(Collectors.toList()).get(0);
+                List<Vehicles> vehiclesList = visitorProfile.getVehiclesList().stream().filter(x -> x.getVehicleName().equalsIgnoreCase(visitTrackerDTO.getVisitorVehicleName())).toList();
+                if (vehiclesList.isEmpty() || !vehiclesList.get(0).getVehicleName().equalsIgnoreCase(visitTrackerDTO.getVisitorVehicleName())){
+                    visitTrackerDTO.setVisitorVehicleName(null);
+                }
             }
         } catch (Exception ex) {
             throw new RuntimeException("Issue in the User Address or the Visitor vehicle details");
@@ -139,7 +147,7 @@ public class NewVisitService {
 
     public void sendUpdateForTracker(VisitTracker visitTracker){
         if(notificationServiceEnabled) {
-            String s = restTemplate.postForObject("http://notification-service/notify/tracking", VisitTrackerDTO.fromVisitorTrackerToVisitorTrackerDTO(visitTracker), String.class);
+            String s = restTemplate.postForObject(notificationServiceUrl, VisitTrackerDTO.fromVisitorTrackerToVisitorTrackerDTO(visitTracker), String.class);
             log.info("API call to Notification service Successful, Response : " + s);
         }
     }
@@ -186,7 +194,7 @@ public class NewVisitService {
         for (VisitTracker visitTracker : byOwnerUsernameAndOwnerApprovalIsFalse) {
             UserProfile byUserNameVisitor = userProfileRepo.findByUserName(visitTracker.getVisitorUsername());
             UserProfile byUserNameOwner = userProfileRepo.findByUserName(visitTracker.getOwnerUsername());
-            String addressName = byUserNameOwner.getUserAddresses().stream().filter(x -> x.getId() == visitTracker.getOwnerAddressId()).collect(Collectors.toList()).get(0).getAddressName();
+            String addressName = byUserNameOwner.getUserAddresses().stream().filter(x -> x.getId() == visitTracker.getOwnerAddressId()).toList().get(0).getAddressName();
 
             VisitTrackerDTO resultDTO = VisitTrackerDTO.fromVisitorTrackerToVisitorTrackerDTO(visitTracker);
             resultDTO.setFullName(byUserNameVisitor.getFirstName() + " " + byUserNameVisitor.getLastName());
@@ -204,7 +212,7 @@ public class NewVisitService {
         for (VisitTracker visitTracker : byOwnerUsernameAndOwnerApprovalIsTrue) {
             UserProfile byUserNameVisitor = userProfileRepo.findByUserName(visitTracker.getVisitorUsername());
             UserProfile byUserNameOwner = userProfileRepo.findByUserName(visitTracker.getOwnerUsername());
-            String addressName = byUserNameOwner.getUserAddresses().stream().filter(x -> x.getId() == visitTracker.getOwnerAddressId()).collect(Collectors.toList()).get(0).getAddressName();
+            String addressName = byUserNameOwner.getUserAddresses().stream().filter(x -> x.getId() == visitTracker.getOwnerAddressId()).toList().get(0).getAddressName();
 
             VisitTrackerDTO resultDTO = VisitTrackerDTO.fromVisitorTrackerToVisitorTrackerDTO(visitTracker);
             resultDTO.setFullName(byUserNameVisitor.getFirstName() + " " + byUserNameVisitor.getLastName());
@@ -215,12 +223,12 @@ public class NewVisitService {
         return listResultDTO;
     }
 
-    public String handleApprovalRequest(VisitTrackerDTO visitTrackerDTO) {
+    public synchronized String handleApprovalRequest(VisitTrackerDTO visitTrackerDTO) {
         if(visitTrackerDTO.getExtraManualComments() != null && !visitTrackerDTO.getOwnerApproval() && visitTrackerDTO.getApprovalOrRejectionTime() == null) {
             List<VisitTracker> byOwnerUsernameAndVisitorUsername = userVisitTrackerRepo.findByOwnerUsernameAndVisitorUsername(visitTrackerDTO.getOwnerUsername(), visitTrackerDTO.getVisitorUsername());
             VisitTracker visitTracker = null;
             if(byOwnerUsernameAndVisitorUsername.size() > 1){
-                visitTracker = byOwnerUsernameAndVisitorUsername.stream().filter((x) -> x.getVisitDateTime().equals(visitTrackerDTO.getVisitDateTime())).collect(Collectors.toList()).get(0);
+                visitTracker = byOwnerUsernameAndVisitorUsername.stream().filter((x) -> x.getVisitDateTime().equals(visitTrackerDTO.getVisitDateTime())).toList().get(0);
             }
             else {
                 visitTracker = byOwnerUsernameAndVisitorUsername.get(0);
@@ -236,7 +244,7 @@ public class NewVisitService {
         return "Not Processed";
     }
 
-    public String handleRejectionRequest(VisitTrackerDTO visitTrackerDTO) {
+    public synchronized String handleRejectionRequest(VisitTrackerDTO visitTrackerDTO) {
         List<VisitTracker> byOwnerUsernameAndVisitorUsername = userVisitTrackerRepo.findByOwnerUsernameAndVisitorUsername(visitTrackerDTO.getOwnerUsername(), visitTrackerDTO.getVisitorUsername());
         VisitTracker visitTracker = null;
         if(byOwnerUsernameAndVisitorUsername.size() > 1){

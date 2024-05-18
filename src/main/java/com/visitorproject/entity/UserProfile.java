@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-@Table
 @NoArgsConstructor
 @Data
 @Entity
@@ -51,10 +50,10 @@ public class UserProfile {
     private String phoneNum;
 
     @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_profile_id")
     private List<UserAddresses> userAddresses;
 
     @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_profile_id")
     private List<Vehicles> vehiclesList;
 }

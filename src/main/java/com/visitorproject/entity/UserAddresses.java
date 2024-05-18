@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 
-@Table
 @NoArgsConstructor
 @Data
 @Entity
@@ -17,7 +16,7 @@ public class UserAddresses {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long Id;
+    private Long id;
     
     private String addressName;
 

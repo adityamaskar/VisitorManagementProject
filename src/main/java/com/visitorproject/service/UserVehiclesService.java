@@ -19,7 +19,7 @@ public class UserVehiclesService {
     @Autowired
     UserProfileRepo userProfileRepo;
 
-    public String setNewVehicle(VehiclesDTO vehiclesDTO, String username) {
+    public synchronized String setNewVehicle(VehiclesDTO vehiclesDTO, String username) {
         UserProfile byUserName = userProfileRepo.findByUserName(username);
         boolean isVehicleNameAvailable = byUserName.getVehiclesList().stream().map(x -> x.getVehicleName()).anyMatch(x -> x.equalsIgnoreCase(vehiclesDTO.getVehicleName()));
         if (!isVehicleNameAvailable) {

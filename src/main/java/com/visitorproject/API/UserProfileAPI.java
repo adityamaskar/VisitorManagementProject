@@ -3,9 +3,7 @@ package com.visitorproject.API;
 import com.visitorproject.dtos.*;
 import com.visitorproject.entity.AuthRequest;
 import com.visitorproject.entity.UserProfile;
-import com.visitorproject.entity.VisitTracker;
 import com.visitorproject.filter.JwtService;
-import com.visitorproject.service.NewVisitService;
 import com.visitorproject.service.UserAddressesService;
 import com.visitorproject.service.UserProfileService;
 import com.visitorproject.service.UserVehiclesService;
@@ -16,6 +14,7 @@ import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -54,6 +53,9 @@ public class UserProfileAPI {
 
     @Autowired
     private JwtService jwtHelper;
+
+    @Value("${kafta-notifications-on-auth}")
+    private boolean kafkaNotificationOnAuth;
 
 //    @Autowired
 //    private NewVisitService newVisitService;
@@ -114,6 +116,10 @@ public class UserProfileAPI {
         throw new IllegalArgumentException("Invalid or missing Authorization header");
     }
 
+//    private String testCircuitBreaker(){
+//        newVisitService.sendUpdateForTracker(new VisitTracker());
+//    }
+
     @PostMapping("/authenticate")
     @CircuitBreaker(name = "authentication" , fallbackMethod = "fallbackAuth")
     @TimeLimiter(name = "authentication")
@@ -122,8 +128,7 @@ public class UserProfileAPI {
         return CompletableFuture.supplyAsync(() -> {
             Authentication authentication = null;
             try {
-                Thread.sleep(10000);
-//            newVisitService.sendUpdateForTracker(new VisitTracker());
+//                Thread.sleep(10000); added to check the timelimter check, for circuitbreaker we can directly enter wrong password multiple times.
                 try {
                     authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUserName(), authRequest.getPassword()));
                 }catch (NullPointerException exception){
@@ -132,7 +137,10 @@ public class UserProfileAPI {
                 }
                 if (authentication.isAuthenticated()) {
                     String token = jwtHelper.generateToken(authRequest.getUserName());
-//                userProfileService.sendNotificationOnAuth(authRequest.getUserName());
+
+                    if(kafkaNotificationOnAuth)
+                        userProfileService.sendNotificationOnAuth(authRequest.getUserName());
+
                     logger.info("User  " + '"' + authRequest.getUserName() + '"' + " is authenticated");
                     return new ResponseEntity<>(token, HttpStatus.ACCEPTED);
                 } else {
