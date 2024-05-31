@@ -7,9 +7,10 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 @SpringBootApplication
 //@CrossOrigin // comment this if using gateway.
 public class VisitorprojectApplication {
+public class VisitorProjectApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(VisitorprojectApplication.class, args);
+        SpringApplication.run(VisitorProjectApplication.class, args);
     }
 
 }
