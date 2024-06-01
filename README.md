@@ -29,6 +29,8 @@ Microservices github links are shown below.
 3. VP-DiscoveryServer -> https://github.com/adityamaskar/VP-DiscoveryServer
 4. VP-Notification-Service -> https://github.com/adityamaskar/VP-Notification-Service
 
+UI repo is yet to be added.
+
 
 
 
