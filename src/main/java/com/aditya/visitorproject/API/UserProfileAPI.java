@@ -34,8 +34,6 @@ import java.util.concurrent.TimeoutException;
 
 @RestController
 @RequestMapping("/user")
-@CrossOrigin(origins = "*") // if using gateway then keep commented otherwise uncomment.
-//@CrossOrigin(origins = "http://localhost:5173")
 public class UserProfileAPI {
 
     @Autowired
@@ -58,9 +56,6 @@ public class UserProfileAPI {
 
     @Value("${kafta-notifications-on-auth}")
     private boolean kafkaNotificationOnAuth;
-
-//    @Autowired
-//    private NewVisitService newVisitService;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -118,14 +113,9 @@ public class UserProfileAPI {
         throw new IllegalArgumentException("Invalid or missing Authorization header");
     }
 
-//    private String testCircuitBreaker(){
-//        newVisitService.sendUpdateForTracker(new VisitTracker());
-//    }
-
     @PostMapping("/authenticate")
     @CircuitBreaker(name = "authentication" , fallbackMethod = "fallbackAuth")
     @TimeLimiter(name = "authentication")
-//    @Retry(name = "authentication")
     public CompletableFuture<ResponseEntity<String>> generateToken(@RequestBody AuthRequest authRequest) throws Exception {
         return CompletableFuture.supplyAsync(() -> {
             Authentication authentication = null;
@@ -172,28 +162,5 @@ public class UserProfileAPI {
             }
             return new ResponseEntity<>(ex.getMessage(), HttpStatus.FORBIDDEN);
         });
-//        if(ex.getMessage().equalsIgnoreCase("Username or Password is wrong")){
-//            return "Username or Password is wrong";
-//        }
-//        return "Oops some Error occurred try after some time";
-
-
     }
-
-//    @GetMapping("/test-micro")
-//    @CircuitBreaker(name = "test1", fallbackMethod = "fallbackMethod1")
-//    @TimeLimiter(name = "test1")
-//    @Retry(name = "test1")
-//    public CompletableFuture<String> testMicro() {
-//        return CompletableFuture.supplyAsync(this::testMicroString);
-//    }
-//
-//    public String testMicroString() {
-//        return "I am working fine";
-//    }
-
-    // Fallback method for circuit breaker
-//    public CompletableFuture<String> fallbackMethod1(RuntimeException runtimeException) {
-//        return CompletableFuture.completedFuture("Fallback method triggered: " + runtimeException.getMessage());
-//    }
 }

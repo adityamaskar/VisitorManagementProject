@@ -10,7 +10,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/user")
-//@CrossOrigin(origins = "*") // if using gateway then keep commented otherwise uncomment.
 public class VisitTrackerAPI {
 
     @Autowired
