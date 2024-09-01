@@ -20,8 +20,17 @@ spec:
           ports:
             - containerPort: 1234
           env:
+#            - name: eureka.client.serviceUrl.defaultZone
+#              value: http://service-discovery-service:8761/eureka/
             - name: eureka.client.serviceUrl.defaultZone
-              value: http://service-discovery-service:8761/eureka/
+              valueFrom:
+                configMapKeyRef:
+                  name: eureka-configmap
+                  key: discovery-service-url
+            - name: visitor-service-name
+              value: vp-app-service
+            - name: visitor-service-name-uri
+              value: http://vp-app-service:8000
 
 ---
 apiVersion: v1
@@ -36,4 +45,4 @@ spec:
     - protocol: TCP
       port: 1234
       targetPort: 1234
-      nodePort: 31000
+      nodePort: 31002

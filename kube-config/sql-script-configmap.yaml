@@ -4,4 +4,4 @@ metadata:
   name: mysql-init-script
 data:
   init-script.sql: |
-    CREATE DATABASE IF NOT EXISTS visitor-app-db;
+    CREATE DATABASE IF NOT EXISTS `visitor-app-db`;

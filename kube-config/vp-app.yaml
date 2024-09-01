@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vp-app-deployment
+  labels:
+    app: vp-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vp-app
+  template:
+    metadata:
+      labels:
+        app: vp-app
+    spec:
+      containers:
+        - name: vp-app
+          image: adityamaskar1/visitor-management-project:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: spring.datasource.password
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: mysql-root-password
+            - name: eureka.client.serviceUrl.defaultZone
+              valueFrom:
+                configMapKeyRef:
+                  name: eureka-configmap
+                  key: discovery-service-url
+            - name: spring.datasource.url
+              value: jdbc:mysql://mysql-service:3306/visitor-app-db
+            - name: server.port
+              value: "8000"
+#            - name: eureka.client.serviceUrl.defaultZone
+#              value: http://service-discovery-service:8761/eureka
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vp-app-service
+spec:
+#  type: LoadBalancer
+#  type: NodePort
+  selector:
+    app: vp-app
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+#      nodePort: 30000
