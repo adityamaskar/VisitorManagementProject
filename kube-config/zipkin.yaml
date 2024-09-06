@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zipkin-deployment
+  labels:
+    app: zipkin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zipkin
+  template:
+    metadata:
+      labels:
+        app: zipkin
+    spec:
+      containers:
+        - name: zipkin
+          image: openzipkin/zipkin:latest
+          ports:
+            - containerPort: 9411
+          env:
+            - name: STORAGE_TYPE
+              value: "mem"  # In-memory storage (customizable)
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zipkin-service  # Service name different from Deployment
+  labels:
+    app: zipkin
+spec:
+  type: LoadBalancer  # Expose Zipkin through a LoadBalancer
+  ports:
+    - port: 9411
+      targetPort: 9411
+      nodePort: 32003
+  selector:
+    app: zipkin

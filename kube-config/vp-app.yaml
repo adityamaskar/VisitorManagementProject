@@ -28,29 +28,34 @@ spec:
             - name: eureka.client.serviceUrl.defaultZone
               valueFrom:
                 configMapKeyRef:
-                  name: eureka-configmap
+                  name: vp-configs
                   key: discovery-service-url
             - name: spring.datasource.url
-              value: jdbc:mysql://mysql-service:3306/visitor-app-db
+              valueFrom:
+                configMapKeyRef:
+                  name: vp-configs
+                  key: db-url
             - name: spring.kafka.bootstrap-servers
-              value: kafka:9092
+              valueFrom:
+                configMapKeyRef:
+                  name: vp-configs
+                  key: kafka-broker
+            - name: spring.zipkin.base-url
+              valueFrom:
+                configMapKeyRef:
+                  name: vp-configs
+                  key: zipkin-url
             - name: server.port
               value: "8000"
-#            - name: eureka.client.serviceUrl.defaultZone
-#              value: http://service-discovery-service:8761/eureka
-
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: vp-app-service
 spec:
-#  type: LoadBalancer
-#  type: NodePort
   selector:
     app: vp-app
   ports:
     - protocol: TCP
       port: 8000
       targetPort: 8000
-#      nodePort: 30000

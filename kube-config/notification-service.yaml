@@ -3,19 +3,19 @@ kind: Deployment
 metadata:
   name: notification-service-deployment
   labels:
-    app: notification-service
+    app: notification-app
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: notification-service
+      app: notification-app
   template:
     metadata:
       labels:
-        app: notification-service
+        app: notification-app
     spec:
       containers:
-        - name: notification-service
+        - name: notification-app
           image: adityamaskar1/vp-notification-service
           ports:
             - containerPort: 1235
@@ -23,22 +23,27 @@ spec:
             - name: eureka.client.serviceUrl.defaultZone
               valueFrom:
                 configMapKeyRef:
-                  name: eureka-configmap
+                  name: vp-configs
                   key: discovery-service-url
             - name: spring.kafka.bootstrap-servers
-              value: http://broker-service:9092
-
+              valueFrom:
+                configMapKeyRef:
+                  name: vp-configs
+                  key: kafka-broker
+            - name: spring.zipkin.base-url
+              valueFrom:
+                configMapKeyRef:
+                  name: vp-configs
+                  key: zipkin-url
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: notification-service-service
+  name: notification-app-service
 spec:
-#  type: LoadBalancer
   selector:
     app: notification-service
   ports:
     - protocol: TCP
       port: 1235
       targetPort: 1235
-#      nodePort: 31002

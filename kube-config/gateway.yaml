@@ -1,3 +1,4 @@
+#we don't need gateway incase of the kubernetes.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -25,7 +26,7 @@ spec:
             - name: eureka.client.serviceUrl.defaultZone
               valueFrom:
                 configMapKeyRef:
-                  name: eureka-configmap
+                  name: vp-configs
                   key: discovery-service-url
             - name: visitor-service-name
               value: vp-app-service
