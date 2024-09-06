@@ -21,7 +21,10 @@ spec:
             - containerPort: 1235
           env:
             - name: eureka.client.serviceUrl.defaultZone
-              value: http://service-discovery-service:8761/eureka/
+              valueFrom:
+                configMapKeyRef:
+                  name: eureka-configmap
+                  key: discovery-service-url
             - name: spring.kafka.bootstrap-servers
               value: http://broker-service:9092
 
@@ -31,11 +34,11 @@ kind: Service
 metadata:
   name: notification-service-service
 spec:
-  type: LoadBalancer
+#  type: LoadBalancer
   selector:
     app: notification-service
   ports:
     - protocol: TCP
       port: 1235
       targetPort: 1235
-      nodePort: 31002
+#      nodePort: 31002

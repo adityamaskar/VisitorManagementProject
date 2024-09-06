@@ -2,5 +2,32 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: eureka-configmap
+#  namespace: default
 data:
   discovery-service-url: http://service-discovery-service:8761/eureka
+
+  zoo.cfg: |
+    tickTime=2000
+    initLimit=10
+    syncLimit=5
+    dataDir=/var/lib/zookeeper
+    clientPort=2181
+    maxClientCnxns=60
+    autopurge.purgeInterval=24
+    autopurge.snapRetainCount=3
+
+  server.properties: |
+    broker.id=0
+    log.dirs=/var/lib/kafka/logs
+    zookeeper.connect=zookeeper:2181
+    num.partitions=1
+    num.network.threads=3
+    num.io.threads=8
+    log.retention.hours=168
+    log.segment.bytes=1073741824
+    log.retention.check.interval.ms=300000
+    default.replication.factor=1
+    offset.metadata.max.age.ms=10000
+    connection.max.idle.ms=10000
+    advertised.listeners=PLAINTEXT://kafka:9092
+    listeners=PLAINTEXT://0.0.0.0:9092

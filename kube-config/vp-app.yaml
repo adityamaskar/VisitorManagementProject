@@ -5,7 +5,7 @@ metadata:
   labels:
     app: vp-app
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: vp-app
@@ -32,6 +32,8 @@ spec:
                   key: discovery-service-url
             - name: spring.datasource.url
               value: jdbc:mysql://mysql-service:3306/visitor-app-db
+            - name: spring.kafka.bootstrap-servers
+              value: kafka:9092
             - name: server.port
               value: "8000"
 #            - name: eureka.client.serviceUrl.defaultZone
