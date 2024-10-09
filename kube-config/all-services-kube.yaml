@@ -18,42 +18,13 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: vp-configs
-#  name: eureka-configmap
-#  namespace: default
 data:
   discovery-service-url: "http://service-discovery-service:8761/eureka"
   db-url : "jdbc:mysql://mysql-service:3306/visitor-app-db"
   kafka-broker : "kafka-service1:9092"
-#  ,kafka-service2:9092,kafka-service3:9092"
   zipkin-url : "http://zipkin-service:9411"
+  notification-service-url : "http://notification-app-service:1235/notify/tracking"
 
-
-  zoo.cfg: |
-    tickTime=2000
-    initLimit=10
-    syncLimit=5
-    dataDir=/var/lib/zookeeper
-    clientPort=2181
-    maxClientCnxns=60
-    autopurge.purgeInterval=24
-    autopurge.snapRetainCount=3
-
-  server.properties: |
-    #broker.id="$(POD_NAME)"
-    log.dirs=/var/lib/kafka/logs
-    zookeeper.connect=zookeeper:2181
-    num.partitions=3
-    num.network.threads=3
-    num.io.threads=8
-    log.retention.hours=168
-    log.segment.bytes=1073741824
-    log.retention.check.interval.ms=300000
-    default.replication.factor=1
-    offset.metadata.max.age.ms=10000
-    connection.max.idle.ms=10000
-    offsets.topic.replication.factor=1
-    advertised.listeners=PLAINTEXT://kafka-service1:9092
-    listeners=PLAINTEXT://0.0.0.0:9092
 ---
 
 apiVersion: apps/v1
@@ -76,12 +47,23 @@ spec:
           image: zookeeper:3.8.0
           ports:
             - containerPort: 2181
-          volumeMounts:
-            - name: data
-              mountPath: /var/lib/zookeeper
-            - name: config
-              mountPath: /conf/zookeeper
-              subPath: zoo.cfg
+          env:
+            - name: TICK_TIME
+              value: "2000"
+            - name: INIT_LIMIT
+              value: "10"
+            - name: SYNC_LIMIT
+              value: "5"
+            - name: DATA_DIR
+              value: "/var/lib/zookeeper"
+            - name: CLIENT_PORT
+              value: "2181"
+            - name: MAX_CLIENT_CNXNS
+              value: "60"
+            - name: AUTOPURGE_PURGE_INTERVAL
+              value: "24"
+            - name: AUTOPURGE_SNAP_RETAIN_COUNT
+              value: "3"
       volumes:
         - name: config
           configMap:
@@ -101,7 +83,7 @@ spec:
     - name: client
       port: 2181
       targetPort: 2181
-  clusterIP: None  # Headless service for direct pod access
+  clusterIP: None
 ---
 
 apiVersion: apps/v1
@@ -127,9 +109,6 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /var/lib/kafka
-#            - name: config
-#              mountPath: /etc/kafka/server.properties  # Updated path to file
-#              subPath: server.properties               # File name reference
           env:
             - name: KAFKA_BROKER_ID
               value: "0"  # Unique ID for this broker
@@ -142,7 +121,7 @@ spec:
             - name: KAFKA_LOG_DIRS
               value: "/var/lib/kafka/logs"  # Directory for Kafka logs
             - name: KAFKA_NUM_PARTITIONS
-              value: "1"  # Default number of partitions per topic
+              value: "3"  # Default number of partitions per topic
             - name: KAFKA_NUM_NETWORK_THREADS
               value: "3"  # Number of network threads
             - name: KAFKA_NUM_IO_THREADS
@@ -154,13 +133,13 @@ spec:
             - name: KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS
               value: "300000"  # Interval to check log retention (in ms)
             - name: KAFKA_DEFAULT_REPLICATION_FACTOR
-              value: "1"  # Default replication factor
+              value: "1"  # Default replication factor  for multi broker
             - name: KAFKA_OFFSET_METADATA_MAX_AGE_MS
               value: "10000"  # Maximum age of offset metadata
             - name: KAFKA_CONNECTION_MAX_IDLE_MS
               value: "10000"  # Maximum idle time for connections
             - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
-              value: "1"  # Replication factor for offsets topic
+              value: "1"  # Replication factor for offsets topic for multi broker
       volumes:
         - name: config
           configMap:
@@ -182,118 +161,7 @@ spec:
   clusterIP: None  # Headless service for direct pod access
 ---
 
-#apiVersion: apps/v1
-#kind: StatefulSet
-#metadata:
-#  name: kafka2
-#spec:
-#  serviceName: "kafka2"
-#  replicas: 1
-#  selector:
-#    matchLabels:
-#      app: kafka2
-#  template:
-#    metadata:
-#      labels:
-#        app: kafka2
-#    spec:
-#      containers:
-#        - name: kafka2
-#          image: confluentinc/cp-kafka:7.4.0
-#          ports:
-#            - containerPort: 9092
-#          volumeMounts:
-#            - name: data
-#              mountPath: /var/lib/kafka
-#            - name: config
-#              mountPath: /etc/kafka/server.properties  # Updated path to file
-#              subPath: server.properties               # File name reference
-#          env:
-#            - name: KAFKA_BROKER_ID
-#              value: "2"  # Unique ID for this broker
-#            - name: KAFKA_ZOOKEEPER_CONNECT
-#              value: "zookeeper:2181"
-#            - name: KAFKA_ADVERTISED_LISTENERS
-#              value: "PLAINTEXT://kafka-service2:9092"  # Required field to fix the error
-#            - name: KAFKA_LISTENERS
-#              value: "PLAINTEXT://0.0.0.0:9092"
-#      volumes:
-#        - name: config
-#          configMap:
-#            name: vp-configs
-#        - name: data
-#          emptyDir: {}
-#---
-#apiVersion: v1
-#kind: Service
-#metadata:
-#  name: kafka-service2
-#spec:
-#  selector:
-#    app: kafka2
-#  ports:
-#    - name: client
-#      port: 9092
-#      targetPort: 9092
-#  clusterIP: None  # Headless service for direct pod access
-#---
-#
-#apiVersion: apps/v1
-#kind: StatefulSet
-#metadata:
-#  name: kafka3
-#spec:
-#  serviceName: "kafka3"
-#  replicas: 1
-#  selector:
-#    matchLabels:
-#      app: kafka3
-#  template:
-#    metadata:
-#      labels:
-#        app: kafka3
-#    spec:
-#      containers:
-#        - name: kafka3
-#          image: confluentinc/cp-kafka:7.4.0
-#          ports:
-#            - containerPort: 9092
-#          volumeMounts:
-#            - name: data
-#              mountPath: /var/lib/kafka
-#            - name: config
-#              mountPath: /etc/kafka/server.properties  # Updated path to file
-#              subPath: server.properties               # File name reference
-#          env:
-#            - name: KAFKA_BROKER_ID
-#              value: "3"  # Unique ID for this broker
-#            - name: KAFKA_ZOOKEEPER_CONNECT
-#              value: "zookeeper:2181"
-#            - name: KAFKA_ADVERTISED_LISTENERS
-#              value: "PLAINTEXT://kafka-service3:9092"  # Required field to fix the error
-#            - name: KAFKA_LISTENERS
-#              value: "PLAINTEXT://0.0.0.0:9092"
-#      volumes:
-#        - name: config
-#          configMap:
-#            name: vp-configs
-#        - name: data
-#          emptyDir: {}
-#---
-#apiVersion: v1
-#kind: Service
-#metadata:
-#  name: kafka-service3
-#spec:
-#  selector:
-#    app: kafka3
-#  ports:
-#    - name: client
-#      port: 9092
-#      targetPort: 9092
-#  clusterIP: None  # Headless service for direct pod access
 
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -361,7 +229,8 @@ spec:
     spec:
       containers:
         - name: notification-app
-          image: adityamaskar1/vp-notification-service
+          image: adityamaskar1/vp-notification-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 1235
           env:
@@ -411,7 +280,8 @@ spec:
     spec:
       containers:
         - name: vp-app
-          image: adityamaskar1/visitor-management-project:2.3
+          image: adityamaskar1/visitor-management-project:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:
@@ -449,7 +319,6 @@ metadata:
   name: vp-app-service
 spec:
   type: LoadBalancer
-#  type: ClusterIP
   selector:
     app: vp-app
   ports:
@@ -486,11 +355,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: zipkin-service  # Service name different from Deployment
+  name: zipkin-service
   labels:
     app: zipkin
 spec:
-  type: LoadBalancer  # Expose Zipkin through a LoadBalancer
+  type: LoadBalancer
   ports:
     - port: 9411
       targetPort: 9411
@@ -516,7 +385,8 @@ spec:
     spec:
       containers:
         - name: service-discovery
-          image: adityamaskar1/vp-discovery-server
+          image: adityamaskar1/vp-discovery-server:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8761
 ---
@@ -541,7 +411,7 @@ metadata:
   labels:
     app: react-app
 spec:
-  replicas: 1  # Adjust based on the load
+  replicas: 1
   selector:
     matchLabels:
       app: react-app
@@ -552,21 +422,11 @@ spec:
     spec:
       containers:
         - name: react-app-container
-          image: adityamaskar1/vp-react-ui:latest  # Use your Docker image here
+          image: adityamaskar1/vp-react-ui:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 80  # Nginx exposes port 80
-#          env:
-#            - name: VITE_BASE_API_URL
-#              value: "http://backend:8080"  # Backend service URL inside Kubernetes
-#          resources:
-#            limits:
-#              memory: "512Mi"
-#              cpu: "500m"
-#            requests:
-#              memory: "256Mi"
-#              cpu: "250m"
-#      imagePullSecrets:
-#        - name: regcred  # If using private Docker registry, else remove this section
+
 
 ---
 apiVersion: v1
