@@ -28,9 +28,6 @@ public class UserProfileService implements UserDetailsService {
     @Autowired
     private UserProfileRepo userProfileRepo;
 
-    @Autowired
-    private KafkaTemplate<String, AuthCompleteEvent> kafkaTemplate;
-
     private static final Logger logger = LoggerFactory.getLogger(UserProfileService.class);
 
     public List<String> getAllProfiles() {
@@ -121,11 +118,16 @@ public class UserProfileService implements UserDetailsService {
         }
     }
 
-    public void sendNotificationOnAuth(String userName){
-        //todo correct in the code level
-        UserProfile userByUserName = getUserByUserName(userName);
-        kafkaTemplate.send(kafkaTemplate.getDefaultTopic(),
-                new AuthCompleteEvent(userName, userByUserName.getFirstName() + " " + userByUserName.getLastName()));
-    }
+//    public void sendNotificationOnAuth(String userName){
+//        //todo correct in the code level
+//        UserProfile userByUserName = getUserByUserName(userName);
+//        try {
+//            kafkaTemplate.send(kafkaTemplate.getDefaultTopic(),
+//                    new AuthCompleteEvent(userName, userByUserName.getFirstName() + " " + userByUserName.getLastName()));
+//        }catch (Exception e){
+//            logger.error("Can't sent notification, some error occurred : " + e.getMessage());
+//            logger.error("Error : " + e);
+//        }
+//    }
 }
 

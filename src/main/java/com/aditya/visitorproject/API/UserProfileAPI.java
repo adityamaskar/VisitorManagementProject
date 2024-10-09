@@ -6,6 +6,7 @@ import com.aditya.visitorproject.dtos.VehiclesDTO;
 import com.aditya.visitorproject.entity.AuthRequest;
 import com.aditya.visitorproject.entity.UserProfile;
 import com.aditya.visitorproject.filter.JwtService;
+import com.aditya.visitorproject.service.NotificationService;
 import com.aditya.visitorproject.service.UserAddressesService;
 import com.aditya.visitorproject.service.UserProfileService;
 import com.aditya.visitorproject.service.UserVehiclesService;
@@ -34,6 +35,7 @@ import java.util.concurrent.TimeoutException;
 
 @RestController
 @RequestMapping("/user")
+@CrossOrigin//("")
 public class UserProfileAPI {
 
     @Autowired
@@ -53,6 +55,9 @@ public class UserProfileAPI {
 
     @Autowired
     private JwtService jwtHelper;
+
+    @Autowired
+    private NotificationService notificationService;
 
     @Value("${kafta-notifications-on-auth}")
     private boolean kafkaNotificationOnAuth;
@@ -131,7 +136,7 @@ public class UserProfileAPI {
                     String token = jwtHelper.generateToken(authRequest.getUserName());
 
                     if(kafkaNotificationOnAuth)
-                        userProfileService.sendNotificationOnAuth(authRequest.getUserName());
+                        notificationService.sendNotificationOnAuth(authRequest.getUserName());
 
                     logger.info("User  " + '"' + authRequest.getUserName() + '"' + " is authenticated");
                     return new ResponseEntity<>(token, HttpStatus.ACCEPTED);

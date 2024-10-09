@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: react-app-deployment
+  labels:
+    app: react-app
+spec:
+  replicas: 1  # Adjust based on the load
+  selector:
+    matchLabels:
+      app: react-app
+  template:
+    metadata:
+      labels:
+        app: react-app
+    spec:
+      containers:
+        - name: react-app-container
+          image: adityamaskar1/vp-react-ui:latest  # Use your Docker image here
+          ports:
+            - containerPort: 80  # Nginx exposes port 80
+#          env:
+#            - name: VITE_BASE_API_URL
+#              value: "http://backend:8080"  # Backend service URL inside Kubernetes
+#          resources:
+#            limits:
+#              memory: "512Mi"
+#              cpu: "500m"
+#            requests:
+#              memory: "256Mi"
+#              cpu: "250m"
+#      imagePullSecrets:
+#        - name: regcred  # If using private Docker registry, else remove this section
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: react-app-service
+  labels:
+    app: react-app
+spec:
+  selector:
+    app: react-app
+  ports:
+    - protocol: TCP
+      port: 80  # The port exposed externally
+      targetPort: 80  # The port the container listens on
+      nodePort: 32004
+  type: LoadBalancer  # Use this for exposing it externally (or NodePort if LoadBalancer is unavailable)
+

@@ -53,9 +53,11 @@ kind: Service
 metadata:
   name: vp-app-service
 spec:
+  type: LoadBalancer
   selector:
     app: vp-app
   ports:
     - protocol: TCP
       port: 8000
       targetPort: 8000
+      nodePort: 32000

@@ -9,6 +9,7 @@ import com.aditya.visitorproject.repo.UserVisitTrackerRepo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -145,10 +146,16 @@ public class NewVisitService {
 
     }
 
+    @Async
     public void sendUpdateForTracker(VisitTracker visitTracker){
         if(notificationServiceEnabled) {
-            String s = restTemplate.postForObject(notificationServiceUrl, VisitTrackerDTO.fromVisitorTrackerToVisitorTrackerDTO(visitTracker), String.class);
-            log.info("API call to Notification service Successful, Response : " + s);
+            try {
+                String s = restTemplate.postForObject(notificationServiceUrl, VisitTrackerDTO.fromVisitorTrackerToVisitorTrackerDTO(visitTracker), String.class);
+                log.info("API call to Notification service Successful, Response : " + s);
+            }catch (Exception e){
+                log.error("error occurred while sending Notification : " + e.getMessage());
+                log.error("error : " + e);
+            }
         }
     }
 
