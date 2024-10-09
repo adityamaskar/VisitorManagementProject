@@ -1,4 +1,5 @@
 # Use a base image with OpenJDK
+#Before running the build make sure to trigger clean - install.
 FROM openjdk:17-jdk-alpine
 
 # Set the working directory inside the container
