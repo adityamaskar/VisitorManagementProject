@@ -3,7 +3,7 @@ package com.aditya.visitorproject.API;
 import com.aditya.visitorproject.dtos.SearchUserInfoDTO;
 import com.aditya.visitorproject.dtos.VisitTrackerDTO;
 import com.aditya.visitorproject.service.NewVisitService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -11,19 +11,21 @@ import java.util.List;
 @RestController
 @RequestMapping("/user")
 @CrossOrigin//("*")
+@RequiredArgsConstructor
 public class VisitTrackerAPI {
 
-    @Autowired
-    UserProfileAPI userProfileAPI;
+    final private UserProfileAPI userProfileAPI;
 
-    @Autowired
-    private NewVisitService newVisitService;
+    final private NewVisitService newVisitService;
 
+    private String getUsernameWithAuthorizationHeader(String authorizationHeader){
+        String token = userProfileAPI.extractJwtToken(authorizationHeader);
+        return userProfileAPI.getUsername(token);
+    }
 
     @GetMapping("/search-home")
     public SearchUserInfoDTO searchHome(@RequestHeader("Authorization") String authorizationHeader, @RequestParam String firstName, @RequestParam String phoneNum, @RequestParam String societyName, @RequestParam(required = false) String addressName) throws RuntimeException{
-        String token = userProfileAPI.extractJwtToken(authorizationHeader);
-        String currentUsername = userProfileAPI.getUsername(token);
+        String currentUsername = getUsernameWithAuthorizationHeader(authorizationHeader);
         return newVisitService.searchSociety(firstName, phoneNum, societyName, addressName, currentUsername);
     }
 
@@ -34,15 +36,13 @@ public class VisitTrackerAPI {
 
     @GetMapping("/received-approval-requests")
     public List<VisitTrackerDTO> receivedApprovalRequest(@RequestHeader("Authorization") String authorizationHeader) {
-        String token = userProfileAPI.extractJwtToken(authorizationHeader);
-        String username = userProfileAPI.getUsername(token);
+        String username = getUsernameWithAuthorizationHeader(authorizationHeader);
         return newVisitService.getPendingRequestsForApproval(username);
     }
 
     @GetMapping("/approved-requests-pending-visit")
     public List<VisitTrackerDTO> approvedRequestsWhichArePending(@RequestHeader("Authorization") String authorizationHeader) {
-        String token = userProfileAPI.extractJwtToken(authorizationHeader);
-        String username = userProfileAPI.getUsername(token);
+        String username = getUsernameWithAuthorizationHeader(authorizationHeader);
         return newVisitService.approvedRequestsWhichArePending(username);
     }
 
@@ -60,8 +60,7 @@ public class VisitTrackerAPI {
 
     @GetMapping("/get-my-requsted-visits")
     public List<VisitTrackerDTO> getMyRequestedVisits(@RequestHeader("Authorization") String authorizationHeader){
-        String token = userProfileAPI.extractJwtToken(authorizationHeader);
-        String username = userProfileAPI.getUsername(token);
+        String username = getUsernameWithAuthorizationHeader(authorizationHeader);
         return newVisitService.getMyRequestedVisits(username);
     }
 }

@@ -64,7 +64,7 @@ public class UserProfileService implements UserDetailsService {
         }
     }
 
-    public synchronized Long createUser(UserProfileDto userProfileDto) {
+    public Long createUser(UserProfileDto userProfileDto) {
         verifyUserProfile(userProfileDto);
         List<UserAddressesDTO> userAddressesDTO = userProfileDto.getUserAddressesDTO();
         List<UserAddresses> userAddressesList = null;

@@ -17,16 +17,28 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  name: react-runtime-config
+data:
+  runtime-config.js: |
+    window.RUNTIME_CONFIG = {
+        // REACT_APP_BASE_URL: "http://vp-app-service:8080" // here we are using some adjustment as we dont have a domain 
+        // to handle the frontend side in minikube, 
+        // first we get ip and port of the vp-app-service
+        // and then use it here and deploy the yaml file again.    
+        REACT_APP_BASE_URL: "http://127.0.0.1:64461"
+    };
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
   name: vp-configs
 data:
-  discovery-service-url: "http://service-discovery-service:8761/eureka"
   db-url : "jdbc:mysql://mysql-service:3306/visitor-app-db"
   kafka-broker : "kafka-service1:9092"
   zipkin-url : "http://zipkin-service:9411"
   notification-service-url : "http://notification-app-service:1235/notify/tracking"
 
 ---
-
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -71,7 +83,6 @@ spec:
         - name: data
           emptyDir: {}
 ---
-
 apiVersion: v1
 kind: Service
 metadata:
@@ -160,8 +171,6 @@ spec:
       targetPort: 9092
   clusterIP: None  # Headless service for direct pod access
 ---
-
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -218,7 +227,7 @@ metadata:
   labels:
     app: notification-app
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: notification-app
@@ -234,11 +243,6 @@ spec:
           ports:
             - containerPort: 1235
           env:
-            - name: eureka.client.serviceUrl.defaultZone
-              valueFrom:
-                configMapKeyRef:
-                  name: vp-configs
-                  key: discovery-service-url
             - name: spring.kafka.bootstrap-servers
               valueFrom:
                 configMapKeyRef:
@@ -256,7 +260,7 @@ metadata:
   name: notification-app-service
 spec:
   selector:
-    app: notification-service
+    app: notification-app
   ports:
     - protocol: TCP
       port: 1235
@@ -269,7 +273,7 @@ metadata:
   labels:
     app: vp-app
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: vp-app
@@ -278,9 +282,13 @@ spec:
       labels:
         app: vp-app
     spec:
+      initContainers:
+        - name: wait-for-mysql
+          image: busybox
+          command: ['sh', '-c', 'until nc -z -v -w30 mysql-service 3306; do echo "Waiting for MySQL..."; sleep 5; done; echo "MySQL is up and running!"']
       containers:
         - name: vp-app
-          image: adityamaskar1/visitor-management-project:latest
+          image: adityamaskar1/visitor-management-project:3.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -290,11 +298,6 @@ spec:
                 secretKeyRef:
                   name: app-secrets
                   key: mysql-root-password
-            - name: eureka.client.serviceUrl.defaultZone
-              valueFrom:
-                configMapKeyRef:
-                  name: vp-configs
-                  key: discovery-service-url
             - name: spring.datasource.url
               valueFrom:
                 configMapKeyRef:
@@ -310,6 +313,11 @@ spec:
                 configMapKeyRef:
                   name: vp-configs
                   key: zipkin-url
+            - name: notification-service-endpoint
+              valueFrom:
+                configMapKeyRef:
+                  name: vp-configs
+                  key: notification-service-url
             - name: server.port
               value: "8080"
 ---
@@ -370,43 +378,6 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: service-discovery-deployment
-  labels:
-    app: service-discovery
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: service-discovery
-  template:
-    metadata:
-      labels:
-        app: service-discovery
-    spec:
-      containers:
-        - name: service-discovery
-          image: adityamaskar1/vp-discovery-server:latest
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 8761
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: service-discovery-service
-spec:
-  type: LoadBalancer
-  selector:
-    app: service-discovery
-  ports:
-    - protocol: TCP
-      port: 8761
-      targetPort: 8761
-      nodePort: 32001
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
   name: react-app-deployment
   labels:
     app: react-app
@@ -422,12 +393,18 @@ spec:
     spec:
       containers:
         - name: react-app-container
-          image: adityamaskar1/vp-react-ui:latest
+          image: adityamaskar1/vp-react-ui:7.0
+          volumeMounts:
+            - name: runtime-config-volume
+              mountPath: /usr/share/nginx/html/runtime-config.js
+              subPath: runtime-config.js
           imagePullPolicy: Always
           ports:
             - containerPort: 80  # Nginx exposes port 80
-
-
+      volumes:
+        - name: runtime-config-volume
+          configMap:
+            name: react-runtime-config
 ---
 apiVersion: v1
 kind: Service
@@ -436,6 +413,7 @@ metadata:
   labels:
     app: react-app
 spec:
+  type: LoadBalancer
   selector:
     app: react-app
   ports:
@@ -443,5 +421,3 @@ spec:
       port: 80
       targetPort: 80
       nodePort: 32004
-  type: LoadBalancer
-

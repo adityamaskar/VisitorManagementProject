@@ -21,7 +21,6 @@ public class NotificationService {
 
     @Async
     public void sendNotificationOnAuth(String userName){
-        //todo correct in the code level
         UserProfile userByUserName = userProfileRepo.findByUserName(userName);
         try {
             kafkaTemplate.send(kafkaTemplate.getDefaultTopic(),

@@ -36,9 +36,6 @@ public class NewVisitService {
     @Value("${notification-service-endpoint}")
     private String notificationServiceUrl;
 
-//    @Value("${kafka-notifications}")
-//    private boolean kafkaNotification;
-
 
     public SearchUserInfoDTO searchSociety(String firstName, String phoneNum, String societyName, String addressName, String currentUsername) {
         UserProfile byPhoneNum = userProfileRepo.findByPhoneNum(phoneNum);
@@ -98,13 +95,13 @@ public class NewVisitService {
         return searchUserInfoDTO;
     }
 
-    public synchronized void setVisit(String visitorUsername, String ownerUsername, VisitTrackerDTO visitTrackerDTO) {
+    public void setVisit(String visitorUsername, String ownerUsername, VisitTrackerDTO visitTrackerDTO) {
         validateIMPData(visitorUsername, ownerUsername, visitTrackerDTO);
 
         UserProfile visitorProfile = userProfileRepo.findByUserName(visitorUsername);
         UserProfile ownerProfile = userProfileRepo.findByUserName(ownerUsername);
         UserAddresses userAddresses;
-        Vehicles vehicles = null;
+//        Vehicles vehicles = null;
         try {
             List<UserAddresses> list = ownerProfile.getUserAddresses().stream().filter(x -> x.getAddressName().equalsIgnoreCase(visitTrackerDTO.getAddressName())).toList();
             if(!list.isEmpty()){
@@ -134,11 +131,12 @@ public class NewVisitService {
                     .NumberOfVisitors(visitTrackerDTO.getNumberOfVisitors())
                     .isVehiclePresent(visitTrackerDTO.getIsVehiclePresent())
                     .visitorVehicleName(visitTrackerDTO.getVisitorVehicleName())
+                    .ownerApproval(false)
                     .build();
 
             VisitTracker save = userVisitTrackerRepo.save(visitTrackerObj);
-            visitTrackerObj.setOwnerApproval(false);
-            userVisitTrackerRepo.save(visitTrackerObj);
+//            visitTrackerObj.setOwnerApproval(false);
+//            userVisitTrackerRepo.save(visitTrackerObj);
             sendUpdateForTracker(visitTrackerObj);
         } catch (Exception ex) {
             throw new RuntimeException("Something Went wrong while saving object");
@@ -159,7 +157,6 @@ public class NewVisitService {
         }
     }
 
-    //todo auth code part
     public static String generateUniqueAuthNumber() {
         UUID uuid = UUID.randomUUID();
         String uniqueNumber = "EN" + uuid.toString().replace("-", "").substring(0, 6);
@@ -194,8 +191,16 @@ public class NewVisitService {
     }
 
     public List<VisitTrackerDTO> getPendingRequestsForApproval(String ownerUsername) {
-
         List<VisitTracker> byOwnerUsernameAndOwnerApprovalIsFalse = userVisitTrackerRepo.findByOwnerUsernameAndOwnerApprovalIsFalseAndRejectionTimeIsNull(ownerUsername);
+        return getVisitTrackerDTOS(byOwnerUsernameAndOwnerApprovalIsFalse);
+    }
+
+    public List<VisitTrackerDTO> approvedRequestsWhichArePending(String ownerUsername) {
+        List<VisitTracker> byOwnerUsernameAndOwnerApprovalIsTrue = userVisitTrackerRepo.findByOwnerUsernameAndOwnerApprovalIsTrueAndRejectionTimeIsNotNull(ownerUsername);
+        return getVisitTrackerDTOS(byOwnerUsernameAndOwnerApprovalIsTrue);
+    }
+
+    private List<VisitTrackerDTO> getVisitTrackerDTOS(List<VisitTracker> byOwnerUsernameAndOwnerApprovalIsFalse) {
         List<VisitTrackerDTO> listResultDTO = new ArrayList<>();
 
         for (VisitTracker visitTracker : byOwnerUsernameAndOwnerApprovalIsFalse) {
@@ -212,25 +217,7 @@ public class NewVisitService {
         return listResultDTO;
     }
 
-    public List<VisitTrackerDTO> approvedRequestsWhichArePending(String ownerUsername) {
-        List<VisitTracker> byOwnerUsernameAndOwnerApprovalIsTrue = userVisitTrackerRepo.findByOwnerUsernameAndOwnerApprovalIsTrueAndRejectionTimeIsNotNull(ownerUsername);
-        List<VisitTrackerDTO> listResultDTO = new ArrayList<>();
-
-        for (VisitTracker visitTracker : byOwnerUsernameAndOwnerApprovalIsTrue) {
-            UserProfile byUserNameVisitor = userProfileRepo.findByUserName(visitTracker.getVisitorUsername());
-            UserProfile byUserNameOwner = userProfileRepo.findByUserName(visitTracker.getOwnerUsername());
-            String addressName = byUserNameOwner.getUserAddresses().stream().filter(x -> x.getId() == visitTracker.getOwnerAddressId()).toList().get(0).getAddressName();
-
-            VisitTrackerDTO resultDTO = VisitTrackerDTO.fromVisitorTrackerToVisitorTrackerDTO(visitTracker);
-            resultDTO.setFullName(byUserNameVisitor.getFirstName() + " " + byUserNameVisitor.getLastName());
-            resultDTO.setAddressName(addressName);
-
-            listResultDTO.add(resultDTO);
-        }
-        return listResultDTO;
-    }
-
-    public synchronized String handleApprovalRequest(VisitTrackerDTO visitTrackerDTO) {
+    public String handleApprovalRequest(VisitTrackerDTO visitTrackerDTO) {
         if(visitTrackerDTO.getExtraManualComments() != null && !visitTrackerDTO.getOwnerApproval() && visitTrackerDTO.getApprovalOrRejectionTime() == null) {
             List<VisitTracker> byOwnerUsernameAndVisitorUsername = userVisitTrackerRepo.findByOwnerUsernameAndVisitorUsername(visitTrackerDTO.getOwnerUsername(), visitTrackerDTO.getVisitorUsername());
             VisitTracker visitTracker = null;

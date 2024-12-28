@@ -5,6 +5,8 @@ FROM openjdk:17-jdk-alpine
 # Set the working directory inside the container
 WORKDIR /app
 
+ENV SPRING_PROFILES_ACTIVE=prod
+
 # Copy the JAR file from the target directory into the container
 COPY target/visitorproject-*.jar app.jar
 

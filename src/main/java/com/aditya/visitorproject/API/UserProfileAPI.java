@@ -14,6 +14,7 @@ import com.aditya.visitorproject.service.UserVehiclesService;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,28 +37,23 @@ import java.util.concurrent.TimeoutException;
 @RestController
 @RequestMapping("/user")
 @CrossOrigin//("")
+@RequiredArgsConstructor
 public class UserProfileAPI {
 
-    @Autowired
-    private UserProfileService userProfileService;
 
-    @Autowired
-    private UserDetailsService userDetailsService;
+    final private UserProfileService userProfileService;
 
-    @Autowired
-    private UserAddressesService userAddressesService;
+    final private UserDetailsService userDetailsService;
 
-    @Autowired
-    private UserVehiclesService userVehiclesService;
+    final private UserAddressesService userAddressesService;
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    final private UserVehiclesService userVehiclesService;
 
-    @Autowired
-    private JwtService jwtHelper;
+    final private AuthenticationManager authenticationManager;
 
-    @Autowired
-    private NotificationService notificationService;
+    final private JwtService jwtHelper;
+
+    final private NotificationService notificationService;
 
     @Value("${kafta-notifications-on-auth}")
     private boolean kafkaNotificationOnAuth;
